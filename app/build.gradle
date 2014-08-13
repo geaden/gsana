@@ -1,0 +1,39 @@
+apply plugin: 'com.android.application'
+
+
+repositories {
+    mavenCentral()
+}
+
+
+android {
+    compileSdkVersion 20
+    buildToolsVersion "19.1.0"
+
+    defaultConfig {
+        applicationId "com.geaden.android.app.gsana"
+        minSdkVersion 10
+        targetSdkVersion 20
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile('com.google.oauth-client:google-oauth-client:1.19.0') {
+        //excluding a particular transitive dependency:
+        exclude group: 'xpp3', module: 'xpp3'
+        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
+        exclude group: 'junit', module: 'junit'
+        exclude group: 'com.google.android', module: 'android'
+    }
+    compile 'commons-codec:commons-codec:1.4'
+    compile 'com.android.support:appcompat-v7:20.+'
+}
