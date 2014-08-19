@@ -48,7 +48,7 @@ public class LoginActivity extends ActionBarActivity {
             Log.d(LOG_TAG, "Data: " + data);
             // Data not null get parameters
             String accessToken = data.getQueryParameter(ACCESS_TOKEN);
-            Log.d(LOG_TAG, "Access tokent from LoginActivity is " + accessToken);
+            Log.d(LOG_TAG, "Access token from LoginActivity is " + accessToken);
             // store auth token in default SharedPreferences
             Log.v(LOG_TAG, "Saving access token...");
             Editor e = getSharedPreferences(Constants.SHARED_PREF_KEY, Context.MODE_PRIVATE).edit();
