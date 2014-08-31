@@ -1,4 +1,4 @@
-package com.geaden.android.app.gsana.api;
+package com.geaden.android.gsana.app.api;
 
 import android.net.Uri;
 import android.util.Log;
@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -19,6 +20,10 @@ import java.net.URL;
  */
 public class AsanaApiImpl implements AsanaApi {
     private final String LOG_TAG = getClass().getSimpleName();
+
+    /** Methods **/
+    final private String GET = "GET";
+    final private String POST = "POST";
 
     private String accessToken;
 
@@ -33,33 +38,40 @@ public class AsanaApiImpl implements AsanaApi {
         this.accessToken = accessToken;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public String getTasks() {
-        // Will contain the raw JSON response as a string.
-        String tasksJsonStr = null;
+    public JSONObject getUserInfo() {
+        final String USER_API = "users/me";
+        Uri buildUri = Uri.parse(ASANA_BASE_URL).buildUpon()
+                .appendPath(USER_API).build();
+        JSONObject userInfo = null;
+        try {
+            URL url = new URL(buildUri.toString());
+            String response = asanaCall(url, GET);
+            Log.v(LOG_TAG, "User info: " + response);
+            userInfo = new JSONObject(response);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, e.getLocalizedMessage());
+        }
+        return userInfo;
+    }
+
+    /**
+     * Calls Asana API
+     * @param url API endpoint
+     * @param method method name to perform request
+     * @return API call result as a string
+     */
+    private String asanaCall(URL url, String method) {
+        String responseData = null;
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
-
-
         try {
-            // Construct the URL for the Asana API query
-            final String WORKSPACE_QUERY_PARAM = "workspace";
-            final String ASSIGNEE_QUERY_PARAM = "assignee";
-
-            final String ASSIGNEE = "me";
-            final String WORKSPACE = WORKSPACE_ID;
-
-            Uri builtUri = Uri.parse(ASANA_BASE_URL).buildUpon()
-                    .appendPath(TASKS_API)
-                    .appendQueryParameter(WORKSPACE_QUERY_PARAM, WORKSPACE)
-                    .appendQueryParameter(ASSIGNEE_QUERY_PARAM, ASSIGNEE)
-                    .build();
-            URL url = new URL(builtUri.toString());
-
-
             // Create the request to Asana, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("GET");
+            urlConnection.setRequestMethod(method);
             Log.v(LOG_TAG, String.format("Bearer %s", accessToken));
             urlConnection.setRequestProperty("Authorization", String.format("Bearer %s", accessToken));
             urlConnection.connect();
@@ -85,8 +97,8 @@ public class AsanaApiImpl implements AsanaApi {
                 // Stream was empty.  No point in parsing.
                 return null;
             }
-            tasksJsonStr = buffer.toString();
-            Log.v(LOG_TAG, "Tasks: " + tasksJsonStr);
+            responseData = buffer.toString();
+            Log.v(LOG_TAG, "Response: " + responseData);
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
             // If the code didn't successfully get the weather data, there's no point in attemping
@@ -104,6 +116,34 @@ public class AsanaApiImpl implements AsanaApi {
                 }
             }
         }
+        return responseData;
+    }
+
+    @Override
+    public String getTasks() {
+        // Will contain the raw JSON response as a string.
+        String tasksJsonStr = null;
+        // Construct the URL for the Asana API query
+        final String WORKSPACE_QUERY_PARAM = "workspace";
+        final String ASSIGNEE_QUERY_PARAM = "assignee";
+
+        final String ASSIGNEE = "me";
+        final String WORKSPACE = WORKSPACE_ID;
+
+        Uri builtUri = Uri.parse(ASANA_BASE_URL).buildUpon()
+                .appendPath(TASKS_API)
+                .appendQueryParameter(WORKSPACE_QUERY_PARAM, WORKSPACE)
+                .appendQueryParameter(ASSIGNEE_QUERY_PARAM, ASSIGNEE)
+                .build();
+
+        try {
+            URL url = new URL(builtUri.toString());
+            tasksJsonStr = asanaCall(url, GET);
+            Log.v(LOG_TAG, "Tasks: " + tasksJsonStr);
+        } catch (Exception e) {
+            Log.e(LOG_TAG, e.getLocalizedMessage());
+        }
+
         return tasksJsonStr;
     }
 

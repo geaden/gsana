@@ -14,12 +14,40 @@
         tools:ignore="MergeRootFrame" />
 
     <!-- The navigation drawer -->
-    <ListView android:id="@+id/left_drawer"
-        android:layout_width="340dp"
+    <LinearLayout
+        android:id="@+id/drawer_liner_layout"
+        android:layout_width="280dp"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:choiceMode="singleChoice"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="0dp"
-        android:background="#fff"/>
+        android:orientation="vertical"
+        android:background="#fff"
+        android:layout_gravity="start">
+
+        <!-- User info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+            <!-- User pic -->
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/left_drawer_user_pic"/>
+
+            <!-- User name -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/left_drawer_user_name"
+                android:text="Foo Bar"
+                android:dividerHeight="0dp"
+                android:background="#fff"/>
+        </LinearLayout>
+
+        <!-- List of Workspaces -->
+        <ListView android:id="@+id/left_drawer_workspace_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:choiceMode="singleChoice"
+            android:divider="@android:color/transparent"/>
+    </LinearLayout>
 </android.support.v4.widget.DrawerLayout>

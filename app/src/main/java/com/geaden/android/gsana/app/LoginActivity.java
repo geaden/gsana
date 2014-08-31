@@ -1,4 +1,4 @@
-package com.geaden.android.app.gsana;
+package com.geaden.android.gsana.app;
 
 import android.content.Context;
 import android.content.SharedPreferences.Editor;

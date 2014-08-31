@@ -11,7 +11,7 @@ android {
     buildToolsVersion "19.1.0"
 
     defaultConfig {
-        applicationId "com.geaden.android.app.gsana"
+        applicationId "com.geaden.android.gsana.app"
         minSdkVersion 10
         targetSdkVersion 20
         versionCode 1

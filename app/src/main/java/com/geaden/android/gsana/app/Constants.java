@@ -1,4 +1,4 @@
-package com.geaden.android.app.gsana;
+package com.geaden.android.gsana.app;
 
 /**
  * Created by geaden on 18/08/14.

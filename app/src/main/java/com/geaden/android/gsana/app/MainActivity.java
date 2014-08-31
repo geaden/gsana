@@ -1,9 +1,12 @@
-package com.geaden.android.app.gsana;
+package com.geaden.android.gsana.app;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
@@ -14,7 +17,24 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
+
+import com.geaden.android.gsana.app.R;
+import com.geaden.android.gsana.app.api.AsanaApi;
+import com.geaden.android.gsana.app.api.AsanaApiImpl;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import javax.net.ssl.HttpsURLConnection;
 
 
 /**
@@ -23,15 +43,24 @@ import android.widget.ListView;
 public class MainActivity extends ActionBarActivity {
     private final String LOG_TAG = getClass().getSimpleName();
 
-    public static final String ACCESS_TOKEN_KEY = "accessToken";
+    public static final String ACCESS_TOKEN_KEY = "access_token";
+
+    public AsanaApi mAsanaApi;
+
+    private ActionBarDrawerToggle mDrawerToggle;
 
     private DrawerLayout mDrawerLayout;
-    private ActionBarDrawerToggle mDrawerToggle;
     private ListView mDrawerList;
+    private TextView mDrawerUserInfo;
+    private ImageView mDrawerUserPic;
+
     private String[] mDrawerTitles;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
+
     private String mAccessToken;
+
+    private ArrayAdapter<String> mWorkspaceAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +78,8 @@ public class MainActivity extends ActionBarActivity {
             startActivity(intent);
             return;
         } else {
-            // Fetch tasks
+            mAsanaApi = new AsanaApiImpl(mAccessToken);
+            // Fetch user info
             mDrawerTitles = new String[]{"Gennady Denisov", "Projects", "Workspace"};
             mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
             mDrawerToggle = new ActionBarDrawerToggle(
@@ -72,11 +102,14 @@ public class MainActivity extends ActionBarActivity {
                     getSupportActionBar().setTitle(mDrawerTitle);
                 }
             };
-            mDrawerList = (ListView) findViewById(R.id.left_drawer);
+            mDrawerList = (ListView) findViewById(R.id.left_drawer_workspace_list);
 
-            // Set the adapter for the list view
-            mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                    R.layout.drawer_list_item, mDrawerTitles));
+            mDrawerUserInfo = (TextView) findViewById(R.id.left_drawer_user_name);
+            mDrawerUserPic = (ImageView) findViewById(R.id.left_drawer_user_pic);
+
+            FetchUserInfoTask userInfoTask = new FetchUserInfoTask();
+            userInfoTask.execute();
+
             // Set the list's click listener
             mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
@@ -155,5 +188,74 @@ public class MainActivity extends ActionBarActivity {
     public void setTitle(CharSequence title) {
         mTitle = title;
         this.getSupportActionBar().setTitle(mTitle);
+    }
+
+    private class FetchUserPicTask extends AsyncTask<String, Void, Bitmap> {
+        @Override
+        protected Bitmap doInBackground(String... params) {
+            Bitmap userPic = null;
+            try {
+                URL url = new URL(params[0]);
+                HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                userPic = BitmapFactory.decodeStream(input);
+            } catch (IOException e) {
+                Log.e(LOG_TAG, e.getMessage());
+            }
+            return userPic;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            mDrawerUserPic.setImageBitmap(bitmap);
+        }
+    }
+
+    /**
+     * Fetches user info in background
+     */
+    public class FetchUserInfoTask extends AsyncTask<Void, Void, JSONObject> {
+        private String LOG_TAG = getClass().getSimpleName();
+        private JSONObject userInfo = null;
+
+        @Override
+        protected JSONObject doInBackground(Void... voids) {
+            userInfo = mAsanaApi.getUserInfo();
+            return userInfo;
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject jsonObject) {
+            final String DATA = "data";
+            final String USER_NAME = "name";
+            final String WORKSPACES = "workspaces";
+            final String WORKSPACE_NAME = "name";
+            final String USER_PHOTO = "photo";
+            final String USER_PHOTO_URL = "image_60x60";
+            try {
+                mDrawerUserInfo.setText(userInfo.getJSONObject(DATA).getString(USER_NAME));
+                String userPhotoUrl = userInfo.getJSONObject(DATA).getJSONObject(USER_PHOTO)
+                        .getString(USER_PHOTO_URL);
+
+                /** Fetch user pic **/
+                FetchUserPicTask fetchUserPicTask = new FetchUserPicTask();
+                fetchUserPicTask.execute(userPhotoUrl);
+
+                JSONArray workspaces = userInfo.getJSONObject(DATA).getJSONArray(WORKSPACES);
+                mDrawerTitles = new String[workspaces.length()];
+                for (int i = 0; i < workspaces.length(); i++) {
+                    JSONObject workspace = workspaces.getJSONObject(i);
+                    mDrawerTitles[i] = workspace.getString(WORKSPACE_NAME);
+                }
+                // Set the adapter for the list view
+                mWorkspaceAdapter = new ArrayAdapter<String>(getApplicationContext(),
+                        R.layout.drawer_list_item, mDrawerTitles);
+                mDrawerList.setAdapter(mWorkspaceAdapter);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, e.getLocalizedMessage());
+            }
+        }
     }
 }

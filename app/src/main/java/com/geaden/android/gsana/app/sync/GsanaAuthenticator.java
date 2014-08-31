@@ -1,4 +1,4 @@
-package com.geaden.android.app.gsana.sync;
+package com.geaden.android.gsana.app.sync;
 
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;

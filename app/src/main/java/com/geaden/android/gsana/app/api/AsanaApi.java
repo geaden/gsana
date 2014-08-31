@@ -1,13 +1,19 @@
-package com.geaden.android.app.gsana.api;
+package com.geaden.android.gsana.app.api;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
  * Interface for Asana Api
- * @see @link{http://developer.asana.com/documentation/
+ * see http://developer.asana.com/documentation/ for more methods
  */
 public interface AsanaApi {
+    /**
+     * Gets logged in user info
+     * @return user info as {@link JSONObject}
+     */
+    public JSONObject getUserInfo();
+
     /**
      * Gets list of tasks for default workspace
      * @return list of tasks
