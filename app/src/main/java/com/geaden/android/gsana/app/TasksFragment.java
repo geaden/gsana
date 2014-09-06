@@ -31,9 +31,6 @@ public class TasksFragment extends Fragment {
 
     private ArrayAdapter<String> mAsanaAdapter;
 
-    private final String API_KEY = "211sQUKy.yLnpQsl7IrRD90vp3UF6BTV";
-    private final String ASSIGNEE = "";
-
     public TasksFragment() {
     }
 
