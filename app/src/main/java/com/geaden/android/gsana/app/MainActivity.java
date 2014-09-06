@@ -29,6 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -158,13 +159,20 @@ public class MainActivity extends ActionBarActivity {
             return true;
         } else if (id == R.id.action_logout) {
             // Remove access token. If logout chosen.
-            Editor editor = getSharedPreferences(Constants.SHARED_PREF_KEY,
-                    Context.MODE_PRIVATE).edit();
-            editor.remove(ACCESS_TOKEN_KEY);
-            editor.commit();
+            invalidateAccessToken();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Invalidates access token
+     */
+    public void invalidateAccessToken() {
+        Editor editor = getSharedPreferences(Constants.SHARED_PREF_KEY,
+                Context.MODE_PRIVATE).edit();
+        editor.remove(ACCESS_TOKEN_KEY);
+        editor.commit();
     }
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
@@ -254,7 +262,11 @@ public class MainActivity extends ActionBarActivity {
                         R.layout.drawer_list_item, mDrawerTitles);
                 mDrawerList.setAdapter(mWorkspaceAdapter);
             } catch (JSONException e) {
-                Log.e(LOG_TAG, e.getLocalizedMessage());
+                Log.e(LOG_TAG, "Error setting user info", e);
+                invalidateAccessToken();
+            } catch (NullPointerException e) {
+                Log.e(LOG_TAG, "Error", e);
+                invalidateAccessToken();
             }
         }
     }

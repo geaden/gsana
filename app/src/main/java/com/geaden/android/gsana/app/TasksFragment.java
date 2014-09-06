@@ -18,6 +18,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -123,13 +124,18 @@ public class TasksFragment extends Fragment {
             AsanaApi asanaApi = new AsanaApiImpl(accessToken);
 
             // Fetch asana tasks
-            String tasksJsonStr = asanaApi.getTasks();
+            String tasksJsonStr = null;
+            try {
+                tasksJsonStr = asanaApi.getTasks();
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error communicating with Asana api", e);
+                ((MainActivity) getActivity()).invalidateAccessToken();
+            }
 
             try {
                 return getTasksDataFromJson(tasksJsonStr);
             } catch (JSONException e) {
-                Log.e(LOG_TAG, e.getMessage(), e);
-                e.printStackTrace();
+                Log.e(LOG_TAG, "Error getting JSON", e);
             }
             // This will only happen if there was an error getting or parsing the forecast.
             return null;

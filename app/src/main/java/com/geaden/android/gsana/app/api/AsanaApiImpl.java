@@ -53,7 +53,7 @@ public class AsanaApiImpl implements AsanaApi {
             Log.v(LOG_TAG, "User info: " + response);
             userInfo = new JSONObject(response);
         } catch (Exception e) {
-            Log.e(LOG_TAG, e.getLocalizedMessage());
+            Log.e(LOG_TAG, "Error retrieving user info", e);
         }
         return userInfo;
     }
@@ -141,7 +141,7 @@ public class AsanaApiImpl implements AsanaApi {
             tasksJsonStr = asanaCall(url, GET);
             Log.v(LOG_TAG, "Tasks: " + tasksJsonStr);
         } catch (Exception e) {
-            Log.e(LOG_TAG, e.getLocalizedMessage());
+            Log.e(LOG_TAG, "Error retrieving tasks", e);
         }
 
         return tasksJsonStr;
