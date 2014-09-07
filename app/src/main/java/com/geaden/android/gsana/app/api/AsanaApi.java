@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 /**
  * Interface for Asana Api
- * see http://developer.asana.com/documentation/ for more methods
+ * <a href="http://developer.asana.com/documentation/">Documentation for more methods</a>
  */
 public interface AsanaApi {
     /**

@@ -20,7 +20,7 @@ import io.oauth.OAuthData;
 
 
 /**
- * Asana login activity
+ * Gsana login activity
  */
 public class LoginActivity extends ActionBarActivity {
     private final String LOG_TAG = getClass().getSimpleName();
@@ -29,8 +29,6 @@ public class LoginActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_oauth);
-        Intent intent = getIntent();
-        Uri data = intent.getData();
         // Show login button
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()

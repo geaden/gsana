@@ -20,7 +20,7 @@
     android:id="@+id/left_drawer_list_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
+    android:text="Test"
     android:textColor="#000"/>

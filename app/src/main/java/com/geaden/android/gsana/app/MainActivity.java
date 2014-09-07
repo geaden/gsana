@@ -95,14 +95,23 @@ public class MainActivity extends ActionBarActivity {
                 public void onDrawerClosed(View view) {
                     super.onDrawerClosed(view);
                     getSupportActionBar().setTitle(mTitle);
+                    invalidateOptionsMenu();
                 }
 
                 /** Called when a drawer has settled in a completely open state. */
                 public void onDrawerOpened(View drawerView) {
                     super.onDrawerOpened(drawerView);
                     getSupportActionBar().setTitle(mDrawerTitle);
+                    invalidateOptionsMenu();
                 }
             };
+
+            // Set the drawer toggle as the DrawerListener
+            mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setHomeButtonEnabled(true);
+
             mDrawerList = (ListView) findViewById(R.id.left_drawer_workspace_list);
 
             mDrawerUserInfo = (TextView) findViewById(R.id.left_drawer_user_name);
