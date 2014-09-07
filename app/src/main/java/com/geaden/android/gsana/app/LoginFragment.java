@@ -12,6 +12,8 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import org.json.JSONException;
+
 import io.oauth.OAuth;
 import io.oauth.OAuthCallback;
 import io.oauth.OAuthData;
@@ -52,6 +54,11 @@ public class LoginFragment extends Fragment implements OAuthCallback {
             return;
         }
         // OAuth flow
+        try {
+            Log.d(LOG_TAG, "Data request" + data.request.toString(4));
+        } catch (JSONException e) {
+
+        }
         Log.d(LOG_TAG, "Access token: " + data.token);
         // Data not null get parameters
         String accessToken = data.token;

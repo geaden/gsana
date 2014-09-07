@@ -6,12 +6,14 @@ import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -119,6 +121,21 @@ public class MainActivity extends ActionBarActivity {
 
             // Set the list's click listener
             mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
+            FloatingActionButton fabButton = new FloatingActionButton.Builder(this)
+                    .withDrawable(getResources().getDrawable(R.drawable.ic_content_new))
+                    .withButtonColor(Color.GREEN)
+                    .withGravity(Gravity.BOTTOM | Gravity.RIGHT)
+                    .withMargins(0, 0, 16, 16)
+                    .create();
+
+            fabButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(getApplicationContext(), TaskCreateActivity.class);
+                    startActivity(intent);
+                }
+            });
 
             if (savedInstanceState == null) {
                 TaskListFragment taskListFragment = TaskListFragment.newInstance(mAccessToken);
