@@ -156,5 +156,24 @@ public class AsanaApiImpl implements AsanaApi {
     public JSONArray getProjects(String workspaceId) {
         return null;
     }
+
+    @Override
+    public JSONObject getTaskData(String taskId) {
+        Uri builtUri = Uri.parse(ASANA_BASE_URL).buildUpon()
+                .appendPath(TASKS_API)
+                .appendPath(taskId)
+                .build();
+        JSONObject taskData = null;
+        try {
+            URL url = new URL(builtUri.toString());
+            String data = asanaCall(url, GET);
+            taskData = new JSONObject(data);
+        } catch (MalformedURLException e) {
+            Log.e(LOG_TAG, "Error building url", e);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error parsing response", e);
+        }
+        return taskData;
+    }
 }
 

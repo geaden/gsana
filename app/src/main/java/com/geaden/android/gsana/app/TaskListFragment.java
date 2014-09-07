@@ -1,5 +1,6 @@
 package com.geaden.android.gsana.app;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -7,10 +8,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.api.AsanaApi;
 import com.geaden.android.gsana.app.api.AsanaApiImpl;
 
@@ -18,20 +19,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * A placeholder fragment containing a simple view.
+ * Task list fragment.
  */
-public class TasksFragment extends Fragment {
+public class TaskListFragment extends Fragment {
     private final String LOG_TAG = getClass().getSimpleName();
 
     private ArrayAdapter<String> mAsanaAdapter;
 
-    public TasksFragment() {
+    public TaskListFragment() {
     }
 
     /**
@@ -39,12 +39,12 @@ public class TasksFragment extends Fragment {
      * @param accessToken Asana access token
      * @return new instance of fragment
      */
-    public static TasksFragment newInstance(String accessToken) {
-        TasksFragment tasksFragment = new TasksFragment();
+    public static TaskListFragment newInstance(String accessToken) {
+        TaskListFragment taskListFragment = new TaskListFragment();
         Bundle args = new Bundle();
         args.putString(MainActivity.ACCESS_TOKEN_KEY, accessToken);
-        tasksFragment.setArguments(args);
-        return tasksFragment;
+        taskListFragment.setArguments(args);
+        return taskListFragment;
     }
 
     public String getAccessToken() {
@@ -75,6 +75,17 @@ public class TasksFragment extends Fragment {
         ListView listView = (ListView) rootView.findViewById(R.id.listview_asana);
         listView.setAdapter(mAsanaAdapter);
         getTasks();
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                String taskData = mAsanaAdapter.getItem(position);
+                String taskId = taskData.split(":")[0];
+                Intent intent = new Intent(getActivity(), TaskDetailActivity.class)
+                        .putExtra(Intent.EXTRA_TEXT, taskId);
+                startActivity(intent);
+            }
+        });
         return rootView;
     }
 
@@ -107,7 +118,7 @@ public class TasksFragment extends Fragment {
             String[] tasksArray = new String[tasks.length()];
             for (int i = 0; i < tasks.length(); i++) {
                 JSONObject taskJson = tasks.getJSONObject(i);
-                tasksArray[i] = taskJson.getString(TASK_ID) + ": " + taskJson.getString(TASK_NAME);
+                tasksArray[i] = taskJson.getString(TASK_ID) + ":" + taskJson.getString(TASK_NAME);
             }
             return tasksArray;
         }

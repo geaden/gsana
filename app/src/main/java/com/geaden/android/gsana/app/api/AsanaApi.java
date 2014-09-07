@@ -27,6 +27,13 @@ public interface AsanaApi {
     public JSONArray getWorkspaces();
 
     /**
+     * Gets task data by task id
+     * @param taskId id of task to get data
+     * @return {@link JSONObject} of task data
+     */
+    public JSONObject getTaskData(String taskId);
+
+    /**
      * Gets list of all projects for workspace id
      * @param workspaceId the workspace id to retrieve projects for
      * @return list of workspace projects

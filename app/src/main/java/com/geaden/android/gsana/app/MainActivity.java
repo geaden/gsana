@@ -21,7 +21,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.api.AsanaApi;
 import com.geaden.android.gsana.app.api.AsanaApiImpl;
 
@@ -29,10 +28,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -124,9 +121,9 @@ public class MainActivity extends ActionBarActivity {
             mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
             if (savedInstanceState == null) {
-                TasksFragment tasksFragment = TasksFragment.newInstance(mAccessToken);
+                TaskListFragment taskListFragment = TaskListFragment.newInstance(mAccessToken);
                 getSupportFragmentManager().beginTransaction()
-                        .add(R.id.container, tasksFragment)
+                        .add(R.id.container, taskListFragment)
                         .commit();
             }
         }
