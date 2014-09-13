@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.geaden.android.gsana.app.api.AsanaApi;
@@ -18,7 +17,6 @@ import com.geaden.android.gsana.app.api.AsanaApiImpl;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 /**
  * Task detail activity.
@@ -46,7 +44,7 @@ public class TaskDetailActivity extends ActionBarActivity {
 
         @Override
         public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            String accessToken = Utils.getAccessToken(getActivity());
+            String accessToken = Utility.getAccessToken(getActivity());
             if (accessToken == null) {
                 Intent intent = new Intent(getActivity(), LoginActivity.class);
                 startActivity(intent);

@@ -28,5 +28,7 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'commons-codec:commons-codec:1.4'
+    compile 'net.smartam.leeloo:oauth2-client:0.1'
+    compile 'net.smartam.leeloo:oauth2-common:0.1'
     compile 'com.android.support:appcompat-v7:20.+'
 }

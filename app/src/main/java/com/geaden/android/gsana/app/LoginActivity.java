@@ -14,6 +14,8 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
+
 import io.oauth.OAuth;
 import io.oauth.OAuthCallback;
 import io.oauth.OAuthData;

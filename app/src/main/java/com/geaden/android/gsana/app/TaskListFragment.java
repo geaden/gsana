@@ -1,10 +1,12 @@
 package com.geaden.android.gsana.app;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,6 +74,21 @@ public class TaskListFragment extends Fragment {
                         R.id.list_item_asana_textview, // The ID of the textview to populate.
                         userTasks);
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        FloatingActionButton fabButton = new FloatingActionButton.Builder(getActivity())
+                .withDrawable(getResources().getDrawable(R.drawable.ic_content_new))
+                .withButtonColor(Color.GREEN)
+                .withGravity(Gravity.BOTTOM | Gravity.CENTER)
+                .withMargins(0, 0, 0, 16)
+                .create();
+
+        fabButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getActivity(), TaskCreateActivity.class);
+                startActivity(intent);
+            }
+        });
+
         ListView listView = (ListView) rootView.findViewById(R.id.listview_asana);
         listView.setAdapter(mAsanaAdapter);
         getTasks();
@@ -137,7 +154,7 @@ public class TaskListFragment extends Fragment {
                 tasksJsonStr = asanaApi.getTasks();
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Error communicating with Asana api", e);
-                ((MainActivity) getActivity()).invalidateAccessToken();
+                Utility.invalidateAccessToken(getActivity());
             }
 
             try {

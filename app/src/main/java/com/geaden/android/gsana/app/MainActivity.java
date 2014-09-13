@@ -2,18 +2,15 @@ package com.geaden.android.gsana.app;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -122,21 +119,6 @@ public class MainActivity extends ActionBarActivity {
             // Set the list's click listener
             mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
-            FloatingActionButton fabButton = new FloatingActionButton.Builder(this)
-                    .withDrawable(getResources().getDrawable(R.drawable.ic_content_new))
-                    .withButtonColor(Color.GREEN)
-                    .withGravity(Gravity.BOTTOM | Gravity.RIGHT)
-                    .withMargins(0, 0, 16, 16)
-                    .create();
-
-            fabButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(getApplicationContext(), TaskCreateActivity.class);
-                    startActivity(intent);
-                }
-            });
-
             if (savedInstanceState == null) {
                 TaskListFragment taskListFragment = TaskListFragment.newInstance(mAccessToken);
                 getSupportFragmentManager().beginTransaction()
@@ -150,13 +132,17 @@ public class MainActivity extends ActionBarActivity {
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         // Sync the toggle state after onRestoreInstanceState has occurred.
-        mDrawerToggle.syncState();
+        if (mDrawerToggle != null) {
+            mDrawerToggle.syncState();
+        }
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
+        if (mDrawerToggle != null) {
+            mDrawerToggle.onConfigurationChanged(newConfig);
+        }
     }
 
     @Override
@@ -182,20 +168,10 @@ public class MainActivity extends ActionBarActivity {
             return true;
         } else if (id == R.id.action_logout) {
             // Remove access token. If logout chosen.
-            invalidateAccessToken();
+            Utility.invalidateAccessToken(this);
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * Invalidates access token
-     */
-    public void invalidateAccessToken() {
-        Editor editor = getSharedPreferences(Constants.SHARED_PREF_KEY,
-                Context.MODE_PRIVATE).edit();
-        editor.remove(ACCESS_TOKEN_KEY);
-        editor.commit();
     }
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
@@ -286,10 +262,10 @@ public class MainActivity extends ActionBarActivity {
                 mDrawerList.setAdapter(mWorkspaceAdapter);
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "Error setting user info", e);
-                invalidateAccessToken();
+                Utility.invalidateAccessToken(getApplicationContext());
             } catch (NullPointerException e) {
                 Log.e(LOG_TAG, "Error", e);
-                invalidateAccessToken();
+                Utility.invalidateAccessToken(getApplicationContext());
             }
         }
     }
