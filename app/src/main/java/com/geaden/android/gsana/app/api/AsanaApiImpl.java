@@ -146,9 +146,7 @@ public class AsanaApiImpl implements AsanaApi {
     }
 
     @Override
-    public String getTasks() {
-        // Will contain the raw JSON response as a string.
-        String tasksJsonStr = null;
+    public JSONObject getTasks() {
         // Construct the URL for the Asana API query
         final String WORKSPACE_QUERY_PARAM = "workspace";
         final String ASSIGNEE_QUERY_PARAM = "assignee";
@@ -156,16 +154,22 @@ public class AsanaApiImpl implements AsanaApi {
         final String ASSIGNEE = "me";
         final String WORKSPACE = WORKSPACE_ID;
 
+        // TODO: Pass workspace as a parameter
         Uri builtUri = Uri.parse(ASANA_BASE_URL).buildUpon()
                 .appendPath(TASKS_API)
                 .appendQueryParameter(WORKSPACE_QUERY_PARAM, WORKSPACE)
                 .appendQueryParameter(ASSIGNEE_QUERY_PARAM, ASSIGNEE)
                 .build();
 
-        tasksJsonStr = asanaCall(builtUri.toString(), GET);
+        // The raw JSON response as a string.
+        String tasksJsonStr = asanaCall(builtUri.toString(), GET);
         Log.v(LOG_TAG, "Tasks: " + tasksJsonStr);
-
-        return tasksJsonStr;
+        try {
+            return new JSONObject(tasksJsonStr);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: ", e);
+        }
+        return null;
     }
 
     @Override

@@ -201,7 +201,7 @@ public class FetchAsanaTask extends AsyncTask<String, Void, String[]> {
         AsanaApi asanaApi = new AsanaApiImpl(mContext, accessToken);
 
         try {
-            String tasksJsonStr = asanaApi.getTasks();
+            String tasksJsonStr = asanaApi.getTasks().toString();
             return getTasksDataFromJson(tasksJsonStr);
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Error getting JSON", e);

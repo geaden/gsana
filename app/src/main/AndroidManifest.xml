@@ -44,8 +44,32 @@
                 android:value=".MainActivity" />
         </activity>
         <provider
-            android:authorities="com.geaden.android.gsana.app"
-            android:name=".data.GsanaProvider" />
+            android:authorities="@string/content_authority"
+            android:name=".data.GsanaProvider"
+            android:exported="false"
+            android:syncable="true"/>
+
+        <!-- SyncAdapter's dummy authentication service -->
+        <service android:name=".sync.GsanaAuthenticatorService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
+
+        <!-- The syncadapter service -->
+        <service
+            android:name=".sync.GsanaSynceService"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter" />
+        </service>
     </application>
 
 </manifest>

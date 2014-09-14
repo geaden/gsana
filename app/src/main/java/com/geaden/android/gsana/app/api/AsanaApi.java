@@ -16,9 +16,9 @@ public interface AsanaApi {
 
     /**
      * Gets list of tasks for default workspace
-     * @return list of tasks
+     * @return {@link org.json.JSONObject} of tasks
      */
-    public String getTasks();
+    public JSONObject getTasks();
 
     /**
      * Gets list of all workspaces for current user

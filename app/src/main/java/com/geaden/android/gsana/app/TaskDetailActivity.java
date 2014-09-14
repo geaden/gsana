@@ -22,37 +22,29 @@ import org.json.JSONObject;
  * Task detail activity.
  */
 public class TaskDetailActivity extends ActionBarActivity {
+    private final String LOG_TAG = getClass().getSimpleName();
+
+    public static final String TASK_KEY = "asana_task_id";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
-
         if (savedInstanceState == null) {
+            // Create the detail fragment and add it to the activity
+            // using a fragment transaction.
+            String taskId = getIntent().getStringExtra(TASK_KEY);
+
+            Log.d(LOG_TAG, "Task Id: " + taskId);
+
+            Bundle arguments = new Bundle();
+            arguments.putString(TASK_KEY, taskId);
+
+            TaskDetailFragment fragment = new TaskDetailFragment();
+            fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.detail_container, new TaskDetailFragment())
+                    .add(R.id.detail_container, fragment)
                     .commit();
-        }
-    }
-
-    public static class TaskDetailFragment extends Fragment {
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            String accessToken = Utility.getAccessToken(getActivity());
-            if (accessToken == null) {
-                Intent intent = new Intent(getActivity(), LoginActivity.class);
-                startActivity(intent);
-                return null;
-            }
-            View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-            TextView detailView = (TextView) rootView.findViewById(R.id.task_detail);
-            // The detail Activity called via intent.  Inspect the intent for task data.
-            Intent intent = getActivity().getIntent();
-            if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
-                String taskData = intent.getStringExtra(Intent.EXTRA_TEXT);
-                detailView.setText(taskData);
-            }
-            return rootView;
         }
     }
 }

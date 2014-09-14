@@ -4,10 +4,15 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:padding="16dp"
     xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <View
+        android:layout_width="16dp"
+        android:layout_height="match_parent"
+        android:background="#ffff0000"
+        android:id="@+id/list_item_asana_project_color"
+        android:layout_marginRight="16dp"/>
 
     <TextView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="wrap_content"

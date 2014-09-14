@@ -9,19 +9,17 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.content.CursorLoader;
-import android.support.v4.widget.SimpleCursorAdapter;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
+import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
 
 /**
  * Task list fragment.
@@ -29,9 +27,16 @@ import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
 public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor> {
     private final String LOG_TAG = getClass().getSimpleName();
 
-    private SimpleCursorAdapter mAsanaAdapter;
+    private GsanaTasksAdapter mAsanaAdapter;
+    private ListView mListView;
+
+    private int mPosition = ListView.INVALID_POSITION;
+
+    private static final String SELECTED_KEY = "selected_position";
 
     private static final int ASANA_TASK_LOADER = 0;
+
+    private FloatingActionButton mFabButton;
 
     // Specify the order of columns for tasks
     private static final String[] ASANA_TASK_COLUMNS = {
@@ -67,7 +72,22 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     public static final int COL_TASK_MODIFIED_AT = 13;
     public static final int COL_TASK_PARENT_ID = 14;
 
+    private static int mLastFirstVisibleItem;
+    private static boolean mIsScrollingUp;
+
     public TaskListFragment() {
+    }
+
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface Callback {
+        /**
+         * TaskDetailFragment for when an item has been selected.
+         */
+        public void onItemSelected(String taskId);
     }
 
     /**
@@ -87,46 +107,58 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         return getArguments().getString(MainActivity.ACCESS_TOKEN_KEY);
     }
 
+    protected int getListViewScrollY() {
+        View topChild = mListView.getChildAt(0);
+        return topChild == null ? 0 : mListView.getFirstVisiblePosition() * topChild.getHeight() -
+                topChild.getTop();
+    }
+
+    private final AbsListView.OnScrollListener mOnScrollListener = new AbsListView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(AbsListView view, int scrollState) {
+            if (view.getId() == mListView.getId()) {
+                final int currentFirstVisibleItem = mListView.getFirstVisiblePosition();
+
+                if (currentFirstVisibleItem > mLastFirstVisibleItem) {
+                    mIsScrollingUp = false;
+                } else if (currentFirstVisibleItem < mLastFirstVisibleItem) {
+                    mIsScrollingUp = true;
+                }
+
+                mLastFirstVisibleItem = currentFirstVisibleItem;
+            }
+        }
+
+        @Override
+        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+            if (!mIsScrollingUp) {
+                // Scrolling down
+                mFabButton.hideFloatingActionButton();
+            } else {
+                // Scrolling up
+                mFabButton.showFloatingActionButton();
+            }
+        }
+    };
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Create some dummy data for the ListView.  Here's a sample weekly forecast
-        String[] data = {
-                "Finish Mockups - Final Project - Today",
-                "Pay Bills - Householding - Today",
-                "Finish Summary - Final Project - Aug 10",
-                "Fix CSS - Website - Aug 26"
-        };
-        List<String> userTasks = new ArrayList<String>(Arrays.asList(data));
-        // The SimpleCursorAdapter will take data from the database through the
-        // Loader and use it to populate the ListView it's attached to.
-        mAsanaAdapter =
-                new SimpleCursorAdapter(
-                        getActivity(), // The current context (this activity)
-                        R.layout.list_item_asana, // The name of the layout ID.
-                        null,
-                        // The column names to use to fill the textviews
-                        new String[]{
-                                TaskEntry.COLUMN_TASK_NAME,
-                                TaskEntry.COLUMN_TASK_DUE_ON
-                        },
-                        // The texviews to fill with the data pulled from the columns above
-                        new int[] {
-                                R.id.list_item_asana_task_name,
-                                R.id.list_item_asana_task_due_on
-                        }, 0);
+        // The ArrayAdapter will take data from a source and
+        // use it to populate the ListView it's attached to.
+        mAsanaAdapter = new GsanaTasksAdapter(getActivity(), null, 0);
 
         // TODO: set custom view binder
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        FloatingActionButton fabButton = new FloatingActionButton.Builder(getActivity())
+        mFabButton = new FloatingActionButton.Builder(getActivity())
                 .withDrawable(getResources().getDrawable(R.drawable.ic_content_new))
                 .withButtonColor(Color.GREEN)
                 .withGravity(Gravity.BOTTOM | Gravity.CENTER)
                 .withMargins(0, 0, 0, 16)
                 .create();
 
-        fabButton.setOnClickListener(new View.OnClickListener() {
+        mFabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getActivity(), TaskCreateActivity.class);
@@ -134,33 +166,34 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
             }
         });
 
-        ListView listView = (ListView) rootView.findViewById(R.id.listview_asana);
-        listView.setAdapter(mAsanaAdapter);
+        mListView = (ListView) rootView.findViewById(R.id.listview_asana);
+        mListView.setAdapter(mAsanaAdapter);
+        mListView.setOnScrollListener(mOnScrollListener);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 Cursor cursor = mAsanaAdapter.getCursor();
 
                 if (cursor != null && cursor.moveToPosition(position)) {
-                    final String DELIMITER = "\n";
-                    String taskName = cursor.getString(COL_TASK_NAME);
-                    String taskNotes = cursor.getString(COL_TASK_NOTES);
-                    String taskCompleted = cursor.getString(COL_TASK_COMPLETED);
-                    String taskCompletedAt = cursor.getString(COL_TASK_DUE_ON);
-                    String taskModifiedAt = cursor.getString(COL_TASK_MODIFIED_AT);
-                    String detailString = "Task name: " + taskName + DELIMITER +
-                            "Task notes: " + taskNotes + DELIMITER +
-                            "Task completed: " + taskCompleted + DELIMITER +
-                            "Task completed at: " + taskCompletedAt + DELIMITER +
-                            "Task modified at: " + taskModifiedAt + DELIMITER;
-                    Intent intent = new Intent(getActivity(), TaskDetailActivity.class)
-                            .putExtra(Intent.EXTRA_TEXT, detailString);
-                    startActivity(intent);
+                    Log.v(LOG_TAG, "Task Id: " + cursor.getString(COL_TASK_ID));
+                    ((Callback) getActivity())
+                            .onItemSelected(cursor.getString(COL_TASK_ID));
                 }
+                mPosition = position;
             }
         });
+        // If there's instance state, mine it for useful information.
+        // The end-goal here is that the user never knows that turning their device sideways
+        // does crazy lifecycle related things.  It should feel like some stuff stretched out,
+        // or magically appeared to take advantage of room, but data or place in the app was never
+        // actually *lost*.
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
+            // The listview probably hasn't even been populated yet.  Actually perform the
+            // swapout in onLoadFinished.
+            mPosition = savedInstanceState.getInt(SELECTED_KEY);
+        }
         return rootView;
     }
 
@@ -173,12 +206,6 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     private void getTasks() {
         FetchAsanaTask task = new FetchAsanaTask(getActivity());
         task.execute(getAccessToken());
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        getTasks();
     }
 
     @Override
@@ -203,8 +230,33 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        // When tablets rotate, the currently selected list item needs to be saved.
+        // When no item is selected, mPosition will be set to Listview.INVALID_POSITION,
+        // so check for that before storing.
+        if (mPosition != ListView.INVALID_POSITION) {
+            outState.putInt(SELECTED_KEY, mPosition);
+        }
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getLoaderManager().restartLoader(ASANA_TASK_LOADER, null, this);
+    }
+
+    @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor data) {
+        if (data.getCount() == 0) {
+            GsanaSyncAdapter.syncImmediately(getActivity());
+        }
         mAsanaAdapter.swapCursor(data);
+        if (mPosition != ListView.INVALID_POSITION) {
+            // If we don't need to restart the loader, and there's a desired position to restore
+            // to, do so now.
+            mListView.smoothScrollToPosition(mPosition);
+        }
     }
 
     @Override

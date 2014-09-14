@@ -38,7 +38,7 @@ import javax.net.ssl.HttpsURLConnection;
 /**
  * Gsana main activity class
  */
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements TaskListFragment.Callback {
     private final String LOG_TAG = getClass().getSimpleName();
 
     public static final String ACCESS_TOKEN_KEY = "access_token";
@@ -190,7 +190,7 @@ public class MainActivity extends ActionBarActivity {
         // Highlight the selected item, update the title, and close the drawer
         mDrawerList.setItemChecked(position, true);
         setTitle(mDrawerTitles[position]);
-        mDrawerLayout.closeDrawer(mDrawerList);
+        mDrawerLayout.closeDrawer(mDrawerLayout);
     }
 
     @Override
@@ -270,5 +270,13 @@ public class MainActivity extends ActionBarActivity {
                 Utility.invalidateAccessToken(getApplicationContext());
             }
         }
+    }
+
+    @Override
+    public void onItemSelected(String taskId) {
+        // TODO: implement two panes mode
+        Intent intent = new Intent(this, TaskDetailActivity.class)
+                .putExtra(TaskDetailActivity.TASK_KEY, taskId);
+        startActivity(intent);
     }
 }
