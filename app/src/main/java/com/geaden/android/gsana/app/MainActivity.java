@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.geaden.android.gsana.app.api.AsanaApi;
 import com.geaden.android.gsana.app.api.AsanaApiImpl;
+import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -75,7 +76,7 @@ public class MainActivity extends ActionBarActivity {
             startActivity(intent);
             return;
         } else {
-            mAsanaApi = new AsanaApiImpl(mAccessToken);
+            mAsanaApi = new AsanaApiImpl(this, mAccessToken);
             // Fetch user info
             mDrawerTitles = new String[]{"Gennady Denisov", "Projects", "Workspace"};
             mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -169,6 +170,7 @@ public class MainActivity extends ActionBarActivity {
         } else if (id == R.id.action_logout) {
             // Remove access token. If logout chosen.
             Utility.invalidateAccessToken(this);
+            startActivity(getIntent());
             return true;
         }
         return super.onOptionsItemSelected(item);

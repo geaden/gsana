@@ -14,6 +14,8 @@ import android.widget.ImageButton;
 
 import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
 
+import org.slf4j.helpers.Util;
+
 /**
  * Login fragment for Asana client
  */
@@ -32,14 +34,15 @@ public class LoginFragment extends Fragment {
         Intent intent = getActivity().getIntent();
         ImageButton asanaLogin = (ImageButton) rootView.findViewById(R.id.imageButton);
         Uri data = intent.getData();
+        AsanaAuthTask authTask = new AsanaAuthTask();
         if (data != null) {
             Log.v(LOG_TAG, "Data " + data.toString());
             String code = data.getQueryParameter("code");
-            AsanaAuthTask authTask = new AsanaAuthTask();
-            authTask.execute(code);
+            authTask.execute(Utility.ACCESS_TOKEN_KEY, code);
         }
         if (intent.hasExtra(Utility.REFRESH_TOKEN_KEY)) {
-            // TODO: refresh access token...
+            String refreshToken = intent.getStringExtra(Utility.REFRESH_TOKEN_KEY);
+            authTask.execute(Utility.REFRESH_TOKEN_KEY, refreshToken);
         }
         asanaLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,6 +58,7 @@ public class LoginFragment extends Fragment {
 
     private class AsanaAuthTask extends AsyncTask<String, Void, AsanaOAuthClient.AsanaTokenResponse> {
         private ProgressDialog dialog = new ProgressDialog(getActivity());
+        private String mAuthType;
 
         /** progress dialog to show user that authentication is in progress. */
         @Override
@@ -66,8 +70,13 @@ public class LoginFragment extends Fragment {
         @Override
         protected AsanaOAuthClient.AsanaTokenResponse doInBackground(String... params) {
             mTokenResponse = new AsanaOAuthClient.AsanaTokenResponse();
-            String code = params[0];
-            mTokenResponse = mAsanaOAuthClient.getAccessToken(code);
+            mAuthType = params[0];
+            String code = params[1];
+            if (mAuthType.equals(Utility.ACCESS_TOKEN_KEY)) {
+                mTokenResponse = mAsanaOAuthClient.getAccessToken(code);
+            } else if (mAuthType.equals(Utility.REFRESH_TOKEN_KEY)) {
+                mTokenResponse = mAsanaOAuthClient.refreshToken(code);
+            }
             return mTokenResponse;
         }
 
@@ -77,7 +86,10 @@ public class LoginFragment extends Fragment {
                 dialog.dismiss();
             }
             Utility.putAccessToken(getActivity(), asanaTokenResponse.getAccessToken());
-            Utility.putRefreshToken(getActivity(), asanaTokenResponse.getRefreshToken());
+            if (!mAuthType.equals(Utility.REFRESH_TOKEN_KEY)) {
+                Utility.putRefreshToken(getActivity(), asanaTokenResponse.getRefreshToken());
+                // TODO: handle such situation
+            }
             Intent mainIntent = new Intent(getActivity(), MainActivity.class);
             startActivity(mainIntent);
         }

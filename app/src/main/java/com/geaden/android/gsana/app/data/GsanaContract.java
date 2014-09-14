@@ -100,7 +100,7 @@ public class GsanaContract {
     public static class TaskEntry implements BaseColumns {
 
         public static final Uri CONTENT_URI =
-                BASE_CONTENT_URI.buildUpon().appendPath(PATH_PROJECT).build();
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_TASK).build();
 
         public static final String CONTENT_TYPE =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + PATH_TASK;

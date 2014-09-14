@@ -5,7 +5,6 @@ import android.util.Log;
 import net.smartam.leeloo.client.OAuthClient;
 import net.smartam.leeloo.client.URLConnectionClient;
 import net.smartam.leeloo.client.request.OAuthClientRequest;
-import net.smartam.leeloo.client.response.OAuthAuthzResponse;
 import net.smartam.leeloo.client.response.OAuthJSONAccessTokenResponse;
 import net.smartam.leeloo.common.exception.OAuthProblemException;
 import net.smartam.leeloo.common.exception.OAuthSystemException;
@@ -31,7 +30,7 @@ public class AsanaOAuthClient {
             OAuthClientRequest request = OAuthClientRequest
                     .authorizationLocation(Settings.AUTH_LOCATION)
                     .setClientId(Settings.CLIENT_ID)
-                    .setRedirectURI(Settings.REDIECT_URI)
+                    .setRedirectURI(Settings.REDIRECT_URI)
                     .setResponseType(ResponseType.CODE.toString())
                     .buildQueryMessage();
             locationUri = request.getLocationUri();
@@ -55,7 +54,7 @@ public class AsanaOAuthClient {
                     .setGrantType(GrantType.AUTHORIZATION_CODE)
                     .setClientId(Settings.CLIENT_ID)
                     .setClientSecret(Settings.CLIENT_SECRET)
-                    .setRedirectURI(Settings.REDIECT_URI)
+                    .setRedirectURI(Settings.REDIRECT_URI)
                     .setCode(code)
                     .buildBodyMessage();
 
@@ -88,8 +87,8 @@ public class AsanaOAuthClient {
      * @param refreshToken the reresh token to update access token
      * @return updated access token
      */
-    public String refreshToken(String refreshToken) {
-        String asanaAccessToken = null;
+    public AsanaTokenResponse refreshToken(String refreshToken) {
+        AsanaTokenResponse asanaTokenResponse = new AsanaTokenResponse();
         try {
             OAuthClientRequest request = OAuthClientRequest
                     .tokenLocation(Settings.TOKEN_LOCATION)
@@ -101,15 +100,16 @@ public class AsanaOAuthClient {
 
             //create OAuth client that uses custom http client under the hood
             OAuthClient oAuthClient = new OAuthClient(new URLConnectionClient());
-
             OAuthJSONAccessTokenResponse oAuthResponse = oAuthClient.accessToken(request);
-            asanaAccessToken = oAuthResponse.getAccessToken();
+            asanaTokenResponse.setAccessToken(oAuthResponse.getAccessToken());
+            asanaTokenResponse.setRefreshToken(oAuthResponse.getRefreshToken());
+            asanaTokenResponse.setExpiresIn(oAuthResponse.getExpiresIn());
         } catch (OAuthSystemException e) {
             Log.e(LOG_TAG, "Get Access Token error", e);
         } catch (OAuthProblemException e) {
             Log.e(LOG_TAG, "Problem with OAuth", e);
         }
-        return asanaAccessToken;
+        return asanaTokenResponse;
     }
 
     /**

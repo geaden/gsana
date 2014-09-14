@@ -1,37 +1,71 @@
 package com.geaden.android.gsana.app;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-
-import com.geaden.android.gsana.app.api.AsanaApi;
-import com.geaden.android.gsana.app.api.AsanaApiImpl;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
+
 /**
  * Task list fragment.
  */
-public class TaskListFragment extends Fragment {
+public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor> {
     private final String LOG_TAG = getClass().getSimpleName();
 
-    private ArrayAdapter<String> mAsanaAdapter;
+    private SimpleCursorAdapter mAsanaAdapter;
+
+    private static final int ASANA_TASK_LOADER = 0;
+
+    // Specify the order of columns for tasks
+    private static final String[] ASANA_TASK_COLUMNS = {
+        TaskEntry.TABLE_NAME + "." + TaskEntry._ID,
+        TaskEntry.COLUMN_TASK_ID,
+        TaskEntry.COLUMN_TASK_NAME,
+        TaskEntry.COLUMN_TASK_NOTES,
+        TaskEntry.COLUMN_TASK_COMPLETED,
+        TaskEntry.COLUMN_TASK_COMPLETED_AT,
+        TaskEntry.COLUMN_TASK_CREATED_AT,
+        TaskEntry.COLUMN_TASK_PROJECT_ID,
+        TaskEntry.COLUMN_TASK_WORKSPACE_ID,
+        TaskEntry.COLUMN_TASK_ASSIGNEE_ID,
+        TaskEntry.COLUMN_TASK_ASSIGNEE_STATUS,
+        TaskEntry.COLUMN_TASK_DUE_ON,
+        TaskEntry.COLUMN_TASK_MODIFIED_AT,
+        TaskEntry.COLUMN_TASK_PARENT_ID
+    };
+
+    // The indices that correspond to ASANA_TASK_COLUMNS
+    public static final int COL_TASK_ID = 1;
+    public static final int COL_TASK_NAME = 2;
+    public static final int COL_TASK_NOTES = 3;
+    public static final int COL_TASK_COMPLETED = 4;
+    public static final int COL_TASK_COMPLETED_AT = 5;
+    public static final int COL_TASK_CREATED = 6;
+    public static final int COL_TASK_CREATED_AT = 7;
+    public static final int COL_TASK_PROJECT_ID = 8;
+    public static final int COL_TASK_WORKSPACE_ID = 9;
+    public static final int COL_TASK_ASSIGNEE_ID = 10;
+    public static final int COL_TASK_ASSIGNEE_STATUS = 11;
+    public static final int COL_TASK_DUE_ON = 12;
+    public static final int COL_TASK_MODIFIED_AT = 13;
+    public static final int COL_TASK_PARENT_ID = 14;
 
     public TaskListFragment() {
     }
@@ -64,16 +98,27 @@ public class TaskListFragment extends Fragment {
                 "Fix CSS - Website - Aug 26"
         };
         List<String> userTasks = new ArrayList<String>(Arrays.asList(data));
-        // Now that we have some dummy forecast data, create an ArrayAdapter.
-        // The ArrayAdapter will take data from a source (like our dummy forecast) and
-        // use it to populate the ListView it's attached to.
+        // The SimpleCursorAdapter will take data from the database through the
+        // Loader and use it to populate the ListView it's attached to.
         mAsanaAdapter =
-                new ArrayAdapter<String>(
+                new SimpleCursorAdapter(
                         getActivity(), // The current context (this activity)
                         R.layout.list_item_asana, // The name of the layout ID.
-                        R.id.list_item_asana_textview, // The ID of the textview to populate.
-                        userTasks);
+                        null,
+                        // The column names to use to fill the textviews
+                        new String[]{
+                                TaskEntry.COLUMN_TASK_NAME,
+                                TaskEntry.COLUMN_TASK_DUE_ON
+                        },
+                        // The texviews to fill with the data pulled from the columns above
+                        new int[] {
+                                R.id.list_item_asana_task_name,
+                                R.id.list_item_asana_task_due_on
+                        }, 0);
+
+        // TODO: set custom view binder
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
         FloatingActionButton fabButton = new FloatingActionButton.Builder(getActivity())
                 .withDrawable(getResources().getDrawable(R.drawable.ic_content_new))
                 .withButtonColor(Color.GREEN)
@@ -91,89 +136,79 @@ public class TaskListFragment extends Fragment {
 
         ListView listView = (ListView) rootView.findViewById(R.id.listview_asana);
         listView.setAdapter(mAsanaAdapter);
-        getTasks();
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                String taskData = mAsanaAdapter.getItem(position);
-                String taskId = taskData.split(":")[0];
-                Intent intent = new Intent(getActivity(), TaskDetailActivity.class)
-                        .putExtra(Intent.EXTRA_TEXT, taskId);
-                startActivity(intent);
+                Cursor cursor = mAsanaAdapter.getCursor();
+
+                if (cursor != null && cursor.moveToPosition(position)) {
+                    final String DELIMITER = "\n";
+                    String taskName = cursor.getString(COL_TASK_NAME);
+                    String taskNotes = cursor.getString(COL_TASK_NOTES);
+                    String taskCompleted = cursor.getString(COL_TASK_COMPLETED);
+                    String taskCompletedAt = cursor.getString(COL_TASK_DUE_ON);
+                    String taskModifiedAt = cursor.getString(COL_TASK_MODIFIED_AT);
+                    String detailString = "Task name: " + taskName + DELIMITER +
+                            "Task notes: " + taskNotes + DELIMITER +
+                            "Task completed: " + taskCompleted + DELIMITER +
+                            "Task completed at: " + taskCompletedAt + DELIMITER +
+                            "Task modified at: " + taskModifiedAt + DELIMITER;
+                    Intent intent = new Intent(getActivity(), TaskDetailActivity.class)
+                            .putExtra(Intent.EXTRA_TEXT, detailString);
+                    startActivity(intent);
+                }
             }
         });
         return rootView;
     }
 
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        getLoaderManager().initLoader(ASANA_TASK_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+
     private void getTasks() {
-        FetchTask task = new FetchTask();
+        FetchAsanaTask task = new FetchAsanaTask(getActivity());
         task.execute(getAccessToken());
     }
 
-    /**
-     * Fetches tasks from Asana
-     */
-    public class FetchTask extends AsyncTask<String, Void, String[]> {
-        private final String LOG_TAG = getClass().getSimpleName();
+    @Override
+    public void onStart() {
+        super.onStart();
+        getTasks();
+    }
 
-        /**
-         * Forms array of strings from JSON string
-         * @param asanaTasksDataJsonStr json string as response from Asana
-         * @return array of tasks string representation
-         * @throws JSONException
-         */
-        private String[] getTasksDataFromJson(String asanaTasksDataJsonStr)
-            throws JSONException {
-            // Fields of data json
-            final String TASKS_DATA = "data";
-            final String TASK_ID = "id";
-            final String TASK_NAME = "name";
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        // This is called when a new Loader needs to be created.  This
+        // fragment only uses one loader, so we don't care about checking the id.
 
-            JSONObject asanaTasksJson = new JSONObject(asanaTasksDataJsonStr);
-            JSONArray tasks = asanaTasksJson.getJSONArray(TASKS_DATA);
-            String[] tasksArray = new String[tasks.length()];
-            for (int i = 0; i < tasks.length(); i++) {
-                JSONObject taskJson = tasks.getJSONObject(i);
-                tasksArray[i] = taskJson.getString(TASK_ID) + ":" + taskJson.getString(TASK_NAME);
-            }
-            return tasksArray;
-        }
+        // To only show current and future dates, get the String representation for today,
+        // and filter the query to return weather only for dates after or including today.
+        // Only return data after today.
 
-        @Override
-        protected String[] doInBackground(String... params) {
-            // Get access token from input parameters
-            String accessToken = params[0];
+        // Now create and return a CursorLoader that will take care of
+        // creating a Cursor for the data being displayed.
+        return new CursorLoader(
+                getActivity(),
+                TaskEntry.CONTENT_URI,
+                ASANA_TASK_COLUMNS,
+                null,
+                null,
+                null
+        );
+    }
 
-            // Initialize Asana api
-            AsanaApi asanaApi = new AsanaApiImpl(accessToken);
+    @Override
+    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor data) {
+        mAsanaAdapter.swapCursor(data);
+    }
 
-            // Fetch asana tasks
-            String tasksJsonStr = null;
-            try {
-                tasksJsonStr = asanaApi.getTasks();
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "Error communicating with Asana api", e);
-                Utility.invalidateAccessToken(getActivity());
-            }
-
-            try {
-                return getTasksDataFromJson(tasksJsonStr);
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, "Error getting JSON", e);
-            }
-            // This will only happen if there was an error getting or parsing the forecast.
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String[] result) {
-            if (result != null) {
-                mAsanaAdapter.clear();
-                for (String taskStr : result) {
-                    mAsanaAdapter.add(taskStr);
-                }
-            }
-        }
+    @Override
+    public void onLoaderReset(Loader<Cursor> cursorLoader) {
+        mAsanaAdapter.swapCursor(null);
     }
 }

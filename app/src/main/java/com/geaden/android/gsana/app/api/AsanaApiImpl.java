@@ -1,7 +1,13 @@
 package com.geaden.android.gsana.app.api;
 
+import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+
+import com.geaden.android.gsana.app.LoginActivity;
+import com.geaden.android.gsana.app.Utility;
+import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,7 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -25,17 +30,22 @@ public class AsanaApiImpl implements AsanaApi {
     final private String GET = "GET";
     final private String POST = "POST";
 
-    private String accessToken;
+    private Context mContext;
+    private String mAccessToken;
+
 
     /** Asan Api **/
     public static final String ASANA_BASE_URL = "https://app.asana.com/api/1.0/";
+
+    /** API endpoints **/
     public static final String TASKS_API = "tasks";
 
 
     private final String WORKSPACE_ID = "498346170860";
 
-    public AsanaApiImpl(String accessToken) {
-        this.accessToken = accessToken;
+    public AsanaApiImpl(Context context, String accessToken) {
+        mContext = context;
+        mAccessToken = accessToken;
     }
 
     /**
@@ -48,11 +58,10 @@ public class AsanaApiImpl implements AsanaApi {
                 .appendPath(USER_API).build();
         JSONObject userInfo = null;
         try {
-            URL url = new URL(buildUri.toString());
-            String response = asanaCall(url, GET);
+            String response = asanaCall(buildUri.toString(), GET);
             Log.v(LOG_TAG, "User info: " + response);
             userInfo = new JSONObject(response);
-        } catch (Exception e) {
+        } catch (JSONException e) {
             Log.e(LOG_TAG, "Error retrieving user info", e);
         }
         return userInfo;
@@ -60,45 +69,62 @@ public class AsanaApiImpl implements AsanaApi {
 
     /**
      * Calls Asana API
-     * @param url API endpoint
+     *
+     * @param urlString string representation of API endpoint
      * @param method method name to perform request
      * @return API call result as a string
      */
-    private String asanaCall(URL url, String method) {
+    private String asanaCall(String urlString, String method) {
         String responseData = null;
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
         try {
+            URL url = new URL(urlString);
             // Create the request to Asana, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod(method);
-            Log.v(LOG_TAG, String.format("Bearer %s", accessToken));
-            urlConnection.setRequestProperty("Authorization", String.format("Bearer %s", accessToken));
+            Log.v(LOG_TAG, String.format("Bearer %s", mAccessToken));
+            urlConnection.setRequestProperty("Authorization", String.format("Bearer %s", mAccessToken));
             urlConnection.connect();
 
-            // Read the input stream into a String
-            InputStream inputStream = urlConnection.getInputStream();
-            StringBuffer buffer = new StringBuffer();
-            if (inputStream == null) {
-                // Nothing to do.
+            int serverCode = urlConnection.getResponseCode();
+            // successful query
+            if (serverCode == 200) {
+                // Read the input stream into a String
+                InputStream inputStream = urlConnection.getInputStream();
+                StringBuffer buffer = new StringBuffer();
+                if (inputStream == null) {
+                    // Nothing to do.
+                    return null;
+                }
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
+                    // But it does make debugging a *lot* easier if you print out the completed
+                    // buffer for debugging.
+                    buffer.append(line + "\n");
+                }
+
+                if (buffer.length() == 0) {
+                    // Stream was empty.  No point in parsing.
+                    return null;
+                }
+                responseData = buffer.toString();
+                Log.v(LOG_TAG, "Response: " + responseData);
+            } else if (serverCode == 401) {
+                Utility.invalidateAccessToken(mContext);
+                // Obtain a new token by calling new activity
+                String refreshToken = Utility.getRefreshToken(mContext);
+                Intent loginIntent = new Intent(mContext, LoginActivity.class);
+                loginIntent.putExtra(Utility.REFRESH_TOKEN_KEY, refreshToken);
+                mContext.startActivity(loginIntent);
+                return null;
+            } else {
+                Log.e(LOG_TAG, "Server returned the following error code: " + serverCode, null);
                 return null;
             }
-            reader = new BufferedReader(new InputStreamReader(inputStream));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                // But it does make debugging a *lot* easier if you print out the completed
-                // buffer for debugging.
-                buffer.append(line + "\n");
-            }
-
-            if (buffer.length() == 0) {
-                // Stream was empty.  No point in parsing.
-                return null;
-            }
-            responseData = buffer.toString();
-            Log.v(LOG_TAG, "Response: " + responseData);
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
             // If the code didn't successfully get the weather data, there's no point in attemping
@@ -136,13 +162,8 @@ public class AsanaApiImpl implements AsanaApi {
                 .appendQueryParameter(ASSIGNEE_QUERY_PARAM, ASSIGNEE)
                 .build();
 
-        try {
-            URL url = new URL(builtUri.toString());
-            tasksJsonStr = asanaCall(url, GET);
-            Log.v(LOG_TAG, "Tasks: " + tasksJsonStr);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Error retrieving tasks", e);
-        }
+        tasksJsonStr = asanaCall(builtUri.toString(), GET);
+        Log.v(LOG_TAG, "Tasks: " + tasksJsonStr);
 
         return tasksJsonStr;
     }
@@ -165,11 +186,8 @@ public class AsanaApiImpl implements AsanaApi {
                 .build();
         JSONObject taskData = null;
         try {
-            URL url = new URL(builtUri.toString());
-            String data = asanaCall(url, GET);
+            String data = asanaCall(builtUri.toString(), GET);
             taskData = new JSONObject(data);
-        } catch (MalformedURLException e) {
-            Log.e(LOG_TAG, "Error building url", e);
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Error parsing response", e);
         }

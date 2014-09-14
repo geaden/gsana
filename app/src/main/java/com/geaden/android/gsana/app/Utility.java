@@ -26,6 +26,15 @@ public class Utility {
     }
 
     /**
+     * Gets refresh token from preferences
+     * @param context context to get preferences for
+     * @return refreshed access token for Asana API
+     */
+    public static String getRefreshToken(Context context) {
+        return getSettingsStringValue(context, REFRESH_TOKEN_KEY);
+    }
+
+    /**
      * Puts values into settings
      *
      * @param context application context

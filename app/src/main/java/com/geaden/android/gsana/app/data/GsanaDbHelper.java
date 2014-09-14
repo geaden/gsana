@@ -15,7 +15,7 @@ import com.geaden.android.gsana.app.data.GsanaContract.UserEntry;
 public class GsanaDbHelper extends SQLiteOpenHelper {
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 4;
 
     public static final String DATABASE_NAME = "gsana.db";
 
@@ -52,18 +52,19 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_TASK_TABLE = "CREATE TABLE " + TaskEntry.TABLE_NAME + " (" +
                 TaskEntry._ID + " INTEGER PRIMARY KEY, " +
                 TaskEntry.COLUMN_TASK_ID + " INTEGER UNIQUE NOT NULL, " +
-                TaskEntry.COLUMN_TASK_ASSIGNEE_ID + " INTEGER NOT NULL, " +
-                TaskEntry.COLUMN_TASK_ASSIGNEE_STATUS + " TEXT NOT NULL, " +
+                TaskEntry.COLUMN_TASK_ASSIGNEE_ID + " INTEGER, " +
+                TaskEntry.COLUMN_TASK_ASSIGNEE_STATUS + " TEXT, " +
                 // 0 - false, 1 - true
-                TaskEntry.COLUMN_TASK_COMPLETED + " INTEGER NOT NULL, " +
+                TaskEntry.COLUMN_TASK_COMPLETED + " INTEGER, " +
                 TaskEntry.COLUMN_TASK_COMPLETED_AT + " TEXT, " +
-                TaskEntry.COLUMN_TASK_CREATED_AT + " TEXT NOT NULL, " +
+                TaskEntry.COLUMN_TASK_CREATED_AT + " TEXT, " +
                 TaskEntry.COLUMN_TASK_DUE_ON + " TEXT, " +
                 TaskEntry.COLUMN_TASK_NAME + " TEXT NOT NULL, " +
                 TaskEntry.COLUMN_TASK_NOTES + " TEXT, " +
                 TaskEntry.COLUMN_TASK_MODIFIED_AT + " TEXT, " +
-                TaskEntry.COLUMN_TASK_PROJECT_ID + " INTEGER NOT NULL, " +
-                TaskEntry.COLUMN_TASK_WORKSPACE_ID + " INTEGER NOT NULL, " +
+                TaskEntry.COLUMN_TASK_PARENT_ID + " INTEGER, " +
+                TaskEntry.COLUMN_TASK_PROJECT_ID + " INTEGER, " +
+                TaskEntry.COLUMN_TASK_WORKSPACE_ID + " INTEGER, " +
                 // Associate task with project
                 " FOREIGN KEY (" + TaskEntry.COLUMN_TASK_PROJECT_ID + ") REFERENCES " +
                 ProjectEntry.TABLE_NAME + " (" + ProjectEntry.COLUMN_PROJECT_ID + "), " +

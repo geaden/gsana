@@ -43,7 +43,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-
+        <provider
+            android:authorities="com.geaden.android.gsana.app"
+            android:name=".data.GsanaProvider" />
     </application>
 
 </manifest>
