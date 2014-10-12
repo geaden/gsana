@@ -20,6 +20,7 @@ import android.widget.ListView;
 
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
 import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
+import com.melnykov.fab.FloatingActionButton;
 
 /**
  * Task list fragment.
@@ -113,34 +114,6 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
                 topChild.getTop();
     }
 
-    private final AbsListView.OnScrollListener mOnScrollListener = new AbsListView.OnScrollListener() {
-        @Override
-        public void onScrollStateChanged(AbsListView view, int scrollState) {
-            if (view.getId() == mListView.getId()) {
-                final int currentFirstVisibleItem = mListView.getFirstVisiblePosition();
-
-                if (currentFirstVisibleItem > mLastFirstVisibleItem) {
-                    mIsScrollingUp = false;
-                } else if (currentFirstVisibleItem < mLastFirstVisibleItem) {
-                    mIsScrollingUp = true;
-                }
-
-                mLastFirstVisibleItem = currentFirstVisibleItem;
-            }
-        }
-
-        @Override
-        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-            if (!mIsScrollingUp) {
-                // Scrolling down
-                mFabButton.hideFloatingActionButton();
-            } else {
-                // Scrolling up
-                mFabButton.showFloatingActionButton();
-            }
-        }
-    };
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -151,12 +124,12 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         // TODO: set custom view binder
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        mFabButton = new FloatingActionButton.Builder(getActivity())
-                .withDrawable(getResources().getDrawable(R.drawable.ic_content_new))
-                .withButtonColor(Color.GREEN)
-                .withGravity(Gravity.BOTTOM | Gravity.CENTER)
-                .withMargins(0, 0, 0, 16)
-                .create();
+        mListView = (ListView) rootView.findViewById(R.id.listview_asana);
+        mListView.setAdapter(mAsanaAdapter);
+
+        mFabButton = (FloatingActionButton) rootView
+                .findViewById(R.id.button_floating_action);
+        mFabButton.attachToListView(mListView);
 
         mFabButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -165,10 +138,6 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
                 startActivity(intent);
             }
         });
-
-        mListView = (ListView) rootView.findViewById(R.id.listview_asana);
-        mListView.setAdapter(mAsanaAdapter);
-        mListView.setOnScrollListener(mOnScrollListener);
 
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
