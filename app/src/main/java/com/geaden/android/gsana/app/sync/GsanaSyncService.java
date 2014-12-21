@@ -5,8 +5,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-public class GsanaSynceService extends Service {
-    private final String LOG_TAG = GsanaSynceService.class.getSimpleName();
+public class GsanaSyncService extends Service {
+    private final String LOG_TAG = GsanaSyncService.class.getSimpleName();
 
     private static final Object sSyncAdapterLock = new Object();
     private static GsanaSyncAdapter sGsanaSyncAdapter = null;

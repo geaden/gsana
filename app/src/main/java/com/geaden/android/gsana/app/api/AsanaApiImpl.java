@@ -39,6 +39,7 @@ public class AsanaApiImpl implements AsanaApi {
 
     /** API endpoints **/
     public static final String TASKS_API = "tasks";
+    public static final String WORKSPACES_API = "workspaces";
 
 
     private final String WORKSPACE_ID = "498346170860";
@@ -68,7 +69,7 @@ public class AsanaApiImpl implements AsanaApi {
     }
 
     /**
-     * Calls Asana API
+     * Basic method to perform call for Asana API
      *
      * @param urlString string representation of API endpoint
      * @param method method name to perform request
@@ -157,8 +158,8 @@ public class AsanaApiImpl implements AsanaApi {
         // TODO: Pass workspace as a parameter
         Uri builtUri = Uri.parse(ASANA_BASE_URL).buildUpon()
                 .appendPath(TASKS_API)
-                .appendQueryParameter(WORKSPACE_QUERY_PARAM, WORKSPACE)
-                .appendQueryParameter(ASSIGNEE_QUERY_PARAM, ASSIGNEE)
+//                .appendQueryParameter(WORKSPACE_QUERY_PARAM, WORKSPACE)
+//                .appendQueryParameter(ASSIGNEE_QUERY_PARAM, ASSIGNEE)
                 .build();
 
         // The raw JSON response as a string.
@@ -173,8 +174,18 @@ public class AsanaApiImpl implements AsanaApi {
     }
 
     @Override
-    public JSONArray getWorkspaces() {
-        return null;
+    public JSONObject getWorkspaces() {
+        Uri builtUri = Uri.parse(ASANA_BASE_URL).buildUpon()
+                .appendPath(WORKSPACES_API)
+                .build();
+        JSONObject workspacesData = null;
+        try {
+            String data = asanaCall(builtUri.toString(), GET);
+            workspacesData = new JSONObject(data);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error parsing response", e);
+        }
+        return workspacesData;
     }
 
     @Override

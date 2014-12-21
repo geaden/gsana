@@ -24,7 +24,7 @@ public interface AsanaApi {
      * Gets list of all workspaces for current user
      * @return list of workspaces
      */
-    public JSONArray getWorkspaces();
+    public JSONObject getWorkspaces();
 
     /**
      * Gets task data by task id

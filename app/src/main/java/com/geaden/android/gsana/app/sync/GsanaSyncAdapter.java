@@ -11,6 +11,7 @@ import android.content.SyncRequest;
 import android.content.SyncResult;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -85,26 +86,82 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
         return null;
     }
 
-    @Override
-    public void onPerformSync(Account account, Bundle bundle, String authority,
-                              ContentProviderClient contentProviderClient, SyncResult syncResult) {
-        Log.d(LOG_TAG, "Start sync");
-        // Getting the access token to send to the Api
-        String accessToken = Utility.getAccessToken(mContext);
+    /**
+     * Performs data insert
+     * @param contentUri content uri to call data insertion
+     * @param cVVector
+     */
+    private void performDataInsert(Uri contentUri, Vector<ContentValues> cVVector) {
+        if (cVVector.size() > 0) {
+            ContentValues[] cvArray = new ContentValues[cVVector.size()];
+            cVVector.toArray(cvArray);
+            int rowsInserted = mContext.getContentResolver()
+                    .bulkInsert(GsanaContract.WorkspaceEntry.CONTENT_URI, cvArray);
+            Log.d(LOG_TAG, "inserted " + rowsInserted + " tasks");
+            // Use a DEBUG variable to gate whether or not you do this, so you can easily
+            // turn it on and off, and so that it's easy to see what you can rip out if
+            // you ever want to remove it.
+            if (DEBUG) {
+                Cursor cursor = mContext.getContentResolver().query(
+                        contentUri,
+                        null,
+                        null,
+                        null,
+                        null
+                );
 
-        // Initialize AsanaApiClient
-        AsanaApi asanaApi = new AsanaApiImpl(mContext, accessToken);
+                if (cursor.moveToFirst()) {
+                    ContentValues resultValues = new ContentValues();
+                    DatabaseUtils.cursorRowToContentValues(cursor, resultValues);
+                    Log.v(LOG_TAG, "Query succeeded! **********");
+                    for (String key : resultValues.keySet()) {
+                        Log.v(LOG_TAG, key + ": " + resultValues.getAsString(key));
+                    }
+                } else {
+                    Log.v(LOG_TAG, "Query failed! :( **********");
+                }
+            }
+        }
+    }
 
-        // Fields of data json
-        final String TASKS_DATA = "data";
-        final String TASK_ID = "id";
-        final String TASK_NAME = "name";
-
-        JSONObject asanaTasksJson = asanaApi.getTasks();
-
+    /**
+     * Performs workspaces insertion
+     * @param workspacesData workspace data as JSON returned from calling Asana api
+     */
+    private void performWorkspacesInsert(JSONObject workspacesData) {
+        final String DATA = "data";
         try {
-            JSONArray tasks = asanaTasksJson.getJSONArray(TASKS_DATA);
-            String[] tasksArray = new String[tasks.length()];
+            JSONArray workspaces = workspacesData.getJSONArray(DATA);
+            // Get and insert the new workspaces information into the database
+            Vector<ContentValues> cVVector = new Vector<ContentValues>(workspaces.length());
+            for (int i = 0; i < workspaces.length(); i++) {
+                JSONObject workspaceObj = workspaces.getJSONObject(i);
+                String workspaceIdKey = "id";
+                String workspaceNameKey = "name";
+
+                String workspaceId = workspaceObj.getString(workspaceIdKey);
+                String workspaceName = workspaceObj.getString(workspaceNameKey);
+
+                ContentValues workspaceValues = new ContentValues();
+
+                workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_ID, workspaceId);
+                workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_NAME, workspaceName);
+                cVVector.add(workspaceValues);
+            }
+            performDataInsert(GsanaContract.WorkspaceEntry.CONTENT_URI, cVVector);
+        } catch (JSONException e) {
+            Log.d(LOG_TAG, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Performs tasks insertion
+     * @param asanaTasksJson returned asana tasks data
+     */
+    private void performTasksInsertion(JSONObject asanaTasksJson) {
+        final String DATA = "data";
+        try {
+            JSONArray tasks = asanaTasksJson.getJSONArray(DATA);
 
             // Get and insert the new tasks information into the database
             Vector<ContentValues> cVVector = new Vector<ContentValues>(tasks.length());
@@ -173,46 +230,25 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
                 }
 
                 cVVector.add(taskValues);
-
-                tasksArray[i] = taskJson.getString(TASK_ID) + ":" + taskJson.getString(TASK_NAME);
             }
-            if (cVVector.size() > 0) {
-                ContentValues[] cvArray = new ContentValues[cVVector.size()];
-                cVVector.toArray(cvArray);
-                int rowsInserted = mContext.getContentResolver()
-                        .bulkInsert(GsanaContract.TaskEntry.CONTENT_URI, cvArray);
-                Log.d(LOG_TAG, "inserted " + rowsInserted + " tasks");
-                // Use a DEBUG variable to gate whether or not you do this, so you can easily
-                // turn it on and off, and so that it's easy to see what you can rip out if
-                // you ever want to remove it.
-                if (DEBUG) {
-                    Cursor taskCursor = mContext.getContentResolver().query(
-                            GsanaContract.TaskEntry.CONTENT_URI,
-                            null,
-                            null,
-                            null,
-                            null
-                    );
-
-                    if (taskCursor.moveToFirst()) {
-                        ContentValues resultValues = new ContentValues();
-                        DatabaseUtils.cursorRowToContentValues(taskCursor, resultValues);
-                        Log.v(LOG_TAG, "Query succeeded! **********");
-                        for (String key : resultValues.keySet()) {
-                            Log.v(LOG_TAG, key + ": " + resultValues.getAsString(key));
-                        }
-                    } else {
-                        Log.v(LOG_TAG, "Query failed! :( **********");
-                    }
-                }
-            }
-
+            performDataInsert(GsanaContract.TaskEntry.CONTENT_URI, cVVector);
         } catch (JSONException e) {
             Log.d(LOG_TAG, e.getMessage(), e);
         }
+    }
 
-        // This will only happen if there was an error getting or parsing tasks.
-        return;
+    @Override
+    public void onPerformSync(Account account, Bundle bundle, String authority,
+                              ContentProviderClient contentProviderClient, SyncResult syncResult) {
+        Log.d(LOG_TAG, "Start sync");
+        // Getting the access token to send to the Api
+        String accessToken = Utility.getAccessToken(mContext);
+
+        // Initialize AsanaApiClient
+        AsanaApi asanaApi = new AsanaApiImpl(mContext, accessToken);
+
+        performTasksInsertion(asanaApi.getTasks());
+        performWorkspacesInsert(asanaApi.getWorkspaces());
     }
 
     /**

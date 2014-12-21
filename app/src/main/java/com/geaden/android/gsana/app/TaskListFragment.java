@@ -19,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
+import com.geaden.android.gsana.app.data.GsanaContract.ProjectEntry;
 import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
 import com.melnykov.fab.FloatingActionButton;
 
@@ -36,6 +37,9 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     private static final String SELECTED_KEY = "selected_position";
 
     private static final int ASANA_TASK_LOADER = 0;
+    private static final int ASANA_USER_LOADER = 1;
+    private static final int ASANA_PROJECTS_LOADER = 2;
+    private static final int ASANA_WORKSPACES_LOADER = 3;
 
     private FloatingActionButton mFabButton;
 
@@ -56,6 +60,14 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         TaskEntry.COLUMN_TASK_MODIFIED_AT,
         TaskEntry.COLUMN_TASK_PARENT_ID
     };
+
+    // Specify the order of columns for tasks
+    private static final String[] ASANA_PROJECTS_COLUMNS = {
+        ProjectEntry.TABLE_NAME + "." + ProjectEntry._ID,
+        ProjectEntry.COLUMN_PROJECT_ID,
+        ProjectEntry.COLUMN_PROJECT_NAME,
+        ProjectEntry.COLUMN_PROJECT_COLOR,
+    }
 
     // The indices that correspond to ASANA_TASK_COLUMNS
     public static final int COL_TASK_ID = 1;
@@ -179,23 +191,34 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        CursorLoader cursorLoader;
         // This is called when a new Loader needs to be created.  This
-        // fragment only uses one loader, so we don't care about checking the id.
-
-        // To only show current and future dates, get the String representation for today,
-        // and filter the query to return weather only for dates after or including today.
-        // Only return data after today.
-
+        switch (i) {
+            case ASANA_TASK_LOADER:
+                cursorLoader = new CursorLoader(
+                        getActivity(),
+                        TaskEntry.CONTENT_URI,
+                        ASANA_TASK_COLUMNS,
+                        null,
+                        null,
+                        null);
+                break;
+            case ASANA_PROJECTS_LOADER:
+                cursorLoader = new CursorLoader(
+                        getActivity(),
+                        ProjectEntry.CONTENT_URI,
+                        ASANA_TASK_COLUMNS,
+                        null,
+                        null,
+                        null);
+            case ASANA_WORKSPACES_LOADER:
+            case ASANA_USER_LOADER:
+            default:
+                cursorLoader = null;
+        }
         // Now create and return a CursorLoader that will take care of
         // creating a Cursor for the data being displayed.
-        return new CursorLoader(
-                getActivity(),
-                TaskEntry.CONTENT_URI,
-                ASANA_TASK_COLUMNS,
-                null,
-                null,
-                null
-        );
+        return cursorLoader;
     }
 
     @Override
