@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 
 import com.geaden.android.gsana.app.api.AsanaApi;
 import com.geaden.android.gsana.app.api.AsanaApiImpl;

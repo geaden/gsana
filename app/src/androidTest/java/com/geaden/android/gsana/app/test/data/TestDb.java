@@ -1,4 +1,4 @@
-package com.geaden.android.gsana.app.test;
+package com.geaden.android.gsana.app.test.data;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -6,11 +6,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
-import com.geaden.android.gsana.app.data.GsanaDbHelper;
 import com.geaden.android.gsana.app.data.GsanaContract.UserEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.ProjectEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.WorkspaceEntry;
+import com.geaden.android.gsana.app.data.GsanaDbHelper;
 
 
 import java.util.Map;
@@ -27,13 +27,13 @@ public class TestDb extends AndroidTestCase {
 
     public void testCreateDb() throws Throwable {
         mContext.deleteDatabase(GsanaDbHelper.DATABASE_NAME);
-        SQLiteDatabase db = new GsanaDbHelper(this.mContext).getWritableDatabase();
+        SQLiteDatabase db = GsanaDbHelper.getInstance(this.mContext).getWritableDatabase();
         assertEquals(true, db.isOpen());
         db.close();
     }
 
     public void testInsertReadDb() {
-        GsanaDbHelper dbHelper = new GsanaDbHelper(mContext);
+        GsanaDbHelper dbHelper = GsanaDbHelper.getInstance(mContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         ContentValues testWorkspaceValues = createWorkspaceValues();

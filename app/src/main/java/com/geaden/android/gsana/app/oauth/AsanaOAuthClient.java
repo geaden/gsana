@@ -20,6 +20,17 @@ import org.json.JSONObject;
 public class AsanaOAuthClient {
     public final String LOG_TAG = getClass().getSimpleName();
 
+    private static AsanaOAuthClient instance = null;
+
+    public static AsanaOAuthClient getInstance() {
+        if (instance == null) {
+            return new AsanaOAuthClient();
+        }
+        return instance;
+    }
+
+    protected AsanaOAuthClient() { };
+
     /**
      * Used in Authorization Code Grant flow
      * @return redirect uri to request authorization code

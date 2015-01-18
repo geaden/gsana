@@ -2,7 +2,6 @@ package com.geaden.android.gsana.app;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -10,11 +9,9 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.content.CursorLoader;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
@@ -66,8 +63,8 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         ProjectEntry.TABLE_NAME + "." + ProjectEntry._ID,
         ProjectEntry.COLUMN_PROJECT_ID,
         ProjectEntry.COLUMN_PROJECT_NAME,
-        ProjectEntry.COLUMN_PROJECT_COLOR,
-    }
+        ProjectEntry.COLUMN_PROJECT_COLOR
+    };
 
     // The indices that correspond to ASANA_TASK_COLUMNS
     public static final int COL_TASK_ID = 1;

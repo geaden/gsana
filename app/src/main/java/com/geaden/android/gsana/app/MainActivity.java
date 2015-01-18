@@ -24,7 +24,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.geaden.android.gsana.app.api.AsanaApi;
+import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.api.AsanaApiImpl;
+import com.geaden.android.gsana.app.api.AsanaCallback;
 import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
 
 import org.json.JSONArray;
@@ -46,7 +48,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
 
     public static final String ACCESS_TOKEN_KEY = "access_token";
 
-    public AsanaApi mAsanaApi;
+    public AsanaApi2 mAsanaApi;
 
     private ActionBarDrawerToggle mDrawerToggle;
 
@@ -79,7 +81,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             startActivity(intent);
             return;
         } else {
-            mAsanaApi = new AsanaApiImpl(this, mAccessToken);
+            mAsanaApi = AsanaApi2.getInstance(this, mAccessToken);
             // Fetch user info
             mDrawerTitles = new String[]{"Gennady Denisov", "Projects", "Workspace"};
             mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -234,7 +236,19 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
 
         @Override
         protected JSONObject doInBackground(Void... voids) {
-            userInfo = mAsanaApi.getUserInfo();
+            mAsanaApi.me(new AsanaCallback() {
+                @Override
+                public void onResult(JSONObject data) {
+                    Log.i(LOG_TAG, "User info: " + data);
+                    userInfo = data;
+                }
+
+                @Override
+                public void onError() {
+                    Log.d(LOG_TAG, "Error retrieving info");
+
+                }
+            });
             return userInfo;
         }
 

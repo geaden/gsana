@@ -15,5 +15,7 @@
     <!-- SyncAdapter related -->
     <string name="sync_account_type">gsana.geaden.com</string>
     <string name="content_authority">"com.geaden.android.gsana.app"</string>
+    <string name="title_activity_api2">Api2Activity</string>
+    <string name="hello_world">Hello world!</string>
 
 </resources>

@@ -69,7 +69,7 @@ public class GsanaProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        mOpenHelper = new GsanaDbHelper(getContext());
+        mOpenHelper = GsanaDbHelper.getInstance(getContext());
         return true;
 
     }

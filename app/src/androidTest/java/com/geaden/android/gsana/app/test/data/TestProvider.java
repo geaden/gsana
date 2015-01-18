@@ -1,4 +1,4 @@
-package com.geaden.android.gsana.app.test;
+package com.geaden.android.gsana.app.test.data;
 
 import android.content.ContentUris;
 import android.content.ContentValues;

@@ -14,8 +14,6 @@ import android.widget.ImageButton;
 
 import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
 
-import org.slf4j.helpers.Util;
-
 /**
  * Login fragment for Asana client
  */
@@ -30,7 +28,7 @@ public class LoginFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_oauth, container, false);
-        mAsanaOAuthClient = new AsanaOAuthClient();
+        mAsanaOAuthClient = AsanaOAuthClient.getInstance();
         Intent intent = getActivity().getIntent();
         ImageButton asanaLogin = (ImageButton) rootView.findViewById(R.id.imageButton);
         Uri data = intent.getData();

@@ -19,7 +19,9 @@ import android.util.Log;
 import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.api.AsanaApi;
+import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.api.AsanaApiImpl;
+import com.geaden.android.gsana.app.api.AsanaCallback;
 import com.geaden.android.gsana.app.data.GsanaContract;
 
 import org.json.JSONArray;
@@ -31,6 +33,8 @@ import java.util.Vector;
 
 public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = GsanaSyncAdapter.class.getSimpleName();
+
+    private String mDefaultWorkspaceId;
 
     // Interval at which to sync with Asana, in milliseconds.
     // 1000 milliseconds (1 second) * 60 seconds (1 minute) * 180 = 3 hours
@@ -96,7 +100,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
             ContentValues[] cvArray = new ContentValues[cVVector.size()];
             cVVector.toArray(cvArray);
             int rowsInserted = mContext.getContentResolver()
-                    .bulkInsert(GsanaContract.WorkspaceEntry.CONTENT_URI, cvArray);
+                    .bulkInsert(contentUri, cvArray);
             Log.d(LOG_TAG, "inserted " + rowsInserted + " tasks");
             // Use a DEBUG variable to gate whether or not you do this, so you can easily
             // turn it on and off, and so that it's easy to see what you can rip out if
@@ -143,7 +147,8 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
                 String workspaceName = workspaceObj.getString(workspaceNameKey);
 
                 ContentValues workspaceValues = new ContentValues();
-
+                mDefaultWorkspaceId = workspaceId;
+                Log.d(LOG_TAG, "Default workspace id " + mDefaultWorkspaceId);
                 workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_ID, workspaceId);
                 workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_NAME, workspaceName);
                 cVVector.add(workspaceValues);
@@ -245,10 +250,50 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
         String accessToken = Utility.getAccessToken(mContext);
 
         // Initialize AsanaApiClient
-        AsanaApi asanaApi = new AsanaApiImpl(mContext, accessToken);
+        AsanaApi2 asanaApi = AsanaApi2.getInstance(mContext, accessToken);
 
-        performTasksInsertion(asanaApi.getTasks());
-        performWorkspacesInsert(asanaApi.getWorkspaces());
+        // Order matters, as we should obtain default workspace id
+        asanaApi.workspaces(new AsanaCallback() {
+
+            @Override
+            public void onResult(JSONObject data) {
+                if (data == null) {
+                    return;
+                }
+                try {
+                    Log.d(LOG_TAG, data.toString(4));
+                    performWorkspacesInsert(data);
+                } catch (JSONException e) {
+                    Log.e(LOG_TAG, e.getMessage());
+                }
+            }
+
+            @Override
+            public void onError() {
+                Log.e(LOG_TAG, "Error retrieving workspaces");
+            }
+        });
+
+        asanaApi.tasks(mDefaultWorkspaceId, new AsanaCallback() {
+            @Override
+            public void onResult(JSONObject data) {
+                if (data == null) {
+                    return;
+                }
+                try {
+                    Log.d(LOG_TAG, data.toString(4));
+                    performTasksInsertion(data);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onError() {
+                Log.e(LOG_TAG, "Error retrieving tasks");
+            }
+        });
+
     }
 
     /**

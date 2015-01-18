@@ -64,7 +64,7 @@
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:src="@drawable/abc_ic_go_search_api_holo_light"/>
+                android:src="@drawable/abc_ic_search_api_mtrl_alpha"/>
             </LinearLayout>
     </LinearLayout>
 </ScrollView>
