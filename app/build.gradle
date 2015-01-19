@@ -32,4 +32,5 @@ dependencies {
     compile 'net.smartam.leeloo:oauth2-common:0.1'
     compile 'com.melnykov:floatingactionbutton:1.0.4'
     compile 'com.android.support:appcompat-v7:21.+'
+    compile 'com.android.support:support-v4:21.+'
 }

@@ -7,12 +7,13 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,11 +24,9 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.geaden.android.gsana.app.api.AsanaApi;
 import com.geaden.android.gsana.app.api.AsanaApi2;
-import com.geaden.android.gsana.app.api.AsanaApiImpl;
 import com.geaden.android.gsana.app.api.AsanaCallback;
-import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,6 +51,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
 
     private ActionBarDrawerToggle mDrawerToggle;
 
+    private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private TextView mDrawerUserInfo;
@@ -88,9 +88,8 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             mDrawerToggle = new ActionBarDrawerToggle(
                     this,                  /* host Activity */
                     mDrawerLayout,         /* DrawerLayout object */
-                    R.drawable.ic_navigation_drawer,  /* nav drawer icon to replace 'Up' caret */
-                    R.string.drawer_open,  /* "open drawer" description */
-                    R.string.drawer_close  /* "close drawer" description */
+                    R.string.drawer_open,         /* "open drawer" description */
+                    R.string.drawer_close         /* "close drawer" description */
             ) {
 
                 /** Called when a drawer has settled in a completely closed state. */
