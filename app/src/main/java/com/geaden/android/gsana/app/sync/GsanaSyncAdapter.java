@@ -23,6 +23,8 @@ import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.api.AsanaApiImpl;
 import com.geaden.android.gsana.app.api.AsanaCallback;
 import com.geaden.android.gsana.app.data.GsanaContract;
+import com.geaden.android.gsana.app.models.AsanaTask;
+import com.geaden.android.gsana.app.models.AsanaWorkspace;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,7 +36,7 @@ import java.util.Vector;
 public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
     public final String LOG_TAG = GsanaSyncAdapter.class.getSimpleName();
 
-    private String mDefaultWorkspaceId;
+    private long mDefaultWorkspaceId;
 
     // Interval at which to sync with Asana, in milliseconds.
     // 1000 milliseconds (1 second) * 60 seconds (1 minute) * 180 = 3 hours
@@ -140,17 +142,20 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
             Vector<ContentValues> cVVector = new Vector<ContentValues>(workspaces.length());
             for (int i = 0; i < workspaces.length(); i++) {
                 JSONObject workspaceObj = workspaces.getJSONObject(i);
-                String workspaceIdKey = "id";
-                String workspaceNameKey = "name";
-
-                String workspaceId = workspaceObj.getString(workspaceIdKey);
-                String workspaceName = workspaceObj.getString(workspaceNameKey);
+                AsanaWorkspace workspace = new AsanaWorkspace(workspaceObj);
+//
+//
+//                String workspaceIdKey = "id";
+//                String workspaceNameKey = "name";
+//
+//                String workspaceId = workspaceObj.getString(workspaceIdKey);
+//                String workspaceName = workspaceObj.getString(workspaceNameKey);
 
                 ContentValues workspaceValues = new ContentValues();
-                mDefaultWorkspaceId = workspaceId;
+                mDefaultWorkspaceId = workspace.getId();
                 Log.d(LOG_TAG, "Default workspace id " + mDefaultWorkspaceId);
-                workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_ID, workspaceId);
-                workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_NAME, workspaceName);
+                workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_ID, workspace.getId());
+                workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_NAME, workspace.getName());
                 cVVector.add(workspaceValues);
             }
             performDataInsert(GsanaContract.WorkspaceEntry.CONTENT_URI, cVVector);
@@ -171,67 +176,28 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
             // Get and insert the new tasks information into the database
             Vector<ContentValues> cVVector = new Vector<ContentValues>(tasks.length());
             for (int i = 0; i < tasks.length(); i++) {
-                // Collected values
-                long taskId;
-                String taskName;
-                String taskNotes;
-                long taskAssigneeId;
-                String taskAssigneeStatus;
-                long taskProjectId;
-                String taskCompleted;
-                String taskCompletedAt;
-                String taskModifiedAt;
-                String taskCreatedAt;
-                String taskDueOn;
-                long taskWorkspaceId;
-
-                // Task object and it's fields
                 JSONObject taskJson = tasks.getJSONObject(i);
 
-                taskId = taskJson.getLong(ASANA_TASK_ID);
-                taskName = taskJson.getString(ASANA_TASK_NAME);
-                taskNotes = getValue(taskJson, ASANA_TASK_NOTES);
-                taskAssigneeStatus = getValue(taskJson, ASANA_TASK_ASSIGNEE_STATUS);
-                taskAssigneeId = taskJson.has(ASANA_TASK_ASSIGNEE_ID) ? taskJson.getLong(ASANA_TASK_ASSIGNEE_ID) : 0;
-                taskCompleted = getValue(taskJson, ASANA_TASK_COMPLETED);
-                taskCompletedAt = getValue(taskJson, ASANA_TASK_COMPLETED_AT);
-                taskModifiedAt = getValue(taskJson, ASANA_TASK_MODIFIED_AT);
-                taskCreatedAt = getValue(taskJson, ASANA_TASK_CREATED_AT);
-                taskDueOn = getValue(taskJson, ASANA_TASK_DUE_ON);
-                if (taskJson.has(ASANA_TASK_WORKSPACE)) {
-                    JSONObject taskWorkspace = taskJson.getJSONObject(ASANA_TASK_WORKSPACE);
-                    taskWorkspaceId = taskWorkspace.getLong(ASANA_WORKSPACE_ID);
-                } else {
-                    taskWorkspaceId = 0;
-                }
-                if (taskJson.has(ASANA_TASK_PROJECTS)) {
-                    JSONArray taskProjects = taskJson.getJSONArray(ASANA_TASK_PROJECTS);
-                    // For now just take first project
-                    taskProjectId = 0;
-                    if (taskProjects.length() > 0) {
-                        JSONObject taskProject = taskProjects.getJSONObject(0);
-                        taskProjectId = taskProject.getLong(ASANA_PROJECT_ID);
-                    }
-                } else {
-                    taskProjectId = 0;
-                }
+                AsanaTask task = new AsanaTask(taskJson);
 
                 ContentValues taskValues = new ContentValues();
 
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ID, taskId);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_CREATED_AT, taskCreatedAt);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_WORKSPACE_ID, taskWorkspaceId);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_STATUS, taskAssigneeStatus);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED, taskCompleted);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_NAME, taskName);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_DUE_ON, taskDueOn);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_NOTES, taskNotes);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED_AT, taskCompletedAt);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_MODIFIED_AT, taskModifiedAt);
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_ID, taskAssigneeId);
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ID, task.getId());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_CREATED_AT, task.getCreatedAt());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_WORKSPACE_ID, task.getWorkspace().getId());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_STATUS, task.getAssigneeStatus());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED, task.getCompleted());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_NAME, task.getName());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_DUE_ON, task.getDueOn());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_NOTES, task.getNotes());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED_AT, task.getCompletedAt());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_MODIFIED_AT, task.getModifiedAt());
+                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_ID, task.getAssigneeId());
 
-                if (taskProjectId > 0) {
-                    taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_PROJECT_ID, taskProjectId);
+
+                if (task.getProjects().size() > 0) {
+                    // Probably not a good way
+                    taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_PROJECT_ID, task.getProjects().get(0).getId());
                 }
 
                 cVVector.add(taskValues);
@@ -250,9 +216,9 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
         String accessToken = Utility.getAccessToken(mContext);
 
         // Initialize AsanaApiClient
-        AsanaApi2 asanaApi = AsanaApi2.getInstance(mContext, accessToken);
+        final AsanaApi2 asanaApi = AsanaApi2.getInstance(mContext, accessToken);
 
-        // Order matters, as we should obtain default workspace id
+        // Order matters, as we should obtain default workspace id first
         asanaApi.workspaces(new AsanaCallback() {
 
             @Override
@@ -263,9 +229,29 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
                 try {
                     Log.d(LOG_TAG, data.toString(4));
                     performWorkspacesInsert(data);
+                    asanaApi.tasks(String.valueOf(mDefaultWorkspaceId), new AsanaCallback() {
+                        @Override
+                        public void onResult(JSONObject data) {
+                            if (data == null) {
+                                return;
+                            }
+                            try {
+                                Log.d(LOG_TAG, data.toString(4));
+                                performTasksInsertion(data);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void onError() {
+                            Log.e(LOG_TAG, "Error retrieving tasks");
+                        }
+                    });
                 } catch (JSONException e) {
                     Log.e(LOG_TAG, e.getMessage());
                 }
+
             }
 
             @Override
@@ -273,27 +259,6 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
                 Log.e(LOG_TAG, "Error retrieving workspaces");
             }
         });
-
-        asanaApi.tasks(mDefaultWorkspaceId, new AsanaCallback() {
-            @Override
-            public void onResult(JSONObject data) {
-                if (data == null) {
-                    return;
-                }
-                try {
-                    Log.d(LOG_TAG, data.toString(4));
-                    performTasksInsertion(data);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onError() {
-                Log.e(LOG_TAG, "Error retrieving tasks");
-            }
-        });
-
     }
 
     /**

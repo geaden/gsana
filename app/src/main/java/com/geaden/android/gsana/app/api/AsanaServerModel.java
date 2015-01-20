@@ -19,15 +19,15 @@ public class AsanaServerModel {
         this.apiBridge = apiBridge;
     }
 
-    /**
-     * Get the URL of a task given some of its data.
-     * @param task {@link com.geaden.android.gsana.app.models.AsanaTask} task data
-     * @return url of the given task
-     */
-    public String getTaskViewUrl(AsanaTask task) {
-        return Uri.parse("https://" + AsanaApiBridge.ASANA_HOST + ":" + AsanaApiBridge.ASANA_PORT)
-                .buildUpon().appendPath("0").appendPath(task.getId()).build().toString();
-    }
+//    /**
+//     * Get the URL of a task given some of its data.
+//     * @param task {@link com.geaden.android.gsana.app.models.AsanaTask} task data
+//     * @return url of the given task
+//     */
+//    public String getTaskViewUrl(AsanaTask task) {
+//        return Uri.parse("https://" + AsanaApiBridge.ASANA_HOST + ":" + AsanaApiBridge.ASANA_PORT)
+//                .buildUpon().appendPath("0").appendPath(task.getId()).build().toString();
+//    }
 
     public void getWorkspaces(AsanaCallback asanaCallback) {
         apiBridge.request("GET", "workspaces", null, null);

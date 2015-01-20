@@ -232,6 +232,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
     public class FetchUserInfoTask extends AsyncTask<Void, Void, JSONObject> {
         private String LOG_TAG = getClass().getSimpleName();
         private JSONObject userInfo = null;
+        private String refreshToken = null;
 
         @Override
         protected JSONObject doInBackground(Void... voids) {
@@ -245,6 +246,12 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
                 @Override
                 public void onError() {
                     Log.d(LOG_TAG, "Error retrieving info");
+                    Utility.invalidateAccessToken(getApplicationContext());
+                    // Obtain a new token by calling new activity
+                    refreshToken = Utility.getRefreshToken(getApplicationContext());
+//                    Intent loginIntent = new Intent(getApplicationContext(), LoginActivity.class);
+//                    loginIntent.putExtra(Utility.REFRESH_TOKEN_KEY, refreshToken);
+//                    getApplicationContext().startActivity(loginIntent);
 
                 }
             });
@@ -253,6 +260,14 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
 
         @Override
         protected void onPostExecute(JSONObject jsonObject) {
+            if (jsonObject == null && refreshToken != null) {
+                // Move to login activity
+                Intent loginIntent = new Intent(getApplicationContext(), LoginActivity.class);
+                loginIntent.putExtra(Utility.REFRESH_TOKEN_KEY, refreshToken);
+                getApplicationContext().startActivity(loginIntent);
+                return;
+            }
+            // TODO: construct AsanaUser object instead
             final String DATA = "data";
             final String USER_NAME = "name";
             final String WORKSPACES = "workspaces";
