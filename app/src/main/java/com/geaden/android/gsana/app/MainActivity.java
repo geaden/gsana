@@ -26,6 +26,9 @@ import android.widget.TextView;
 
 import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.api.AsanaCallback;
+import com.geaden.android.gsana.app.api.AsanaResponse;
+import com.geaden.android.gsana.app.models.AsanaUser;
+import com.geaden.android.gsana.app.models.AsanaWorkspace;
 
 
 import org.json.JSONArray;
@@ -35,6 +38,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -229,77 +233,59 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
     /**
      * Fetches user info in background
      */
-    public class FetchUserInfoTask extends AsyncTask<Void, Void, JSONObject> {
+    public class FetchUserInfoTask extends AsyncTask<Void, Void, AsanaUser> {
         private String LOG_TAG = getClass().getSimpleName();
-        private JSONObject userInfo = null;
         private String refreshToken = null;
 
         @Override
-        protected JSONObject doInBackground(Void... voids) {
-            mAsanaApi.me(new AsanaCallback() {
+        protected AsanaUser doInBackground(Void... voids) {
+            final AsanaUser asanaUser = new AsanaUser();
+            mAsanaApi.me(new AsanaCallback<AsanaUser>() {
                 @Override
-                public void onResult(JSONObject data) {
-                    Log.i(LOG_TAG, "User info: " + data);
-                    userInfo = data;
+                public void onResult(AsanaUser me) {
+                    Log.i(LOG_TAG, "User info: " + me);
+                    asanaUser.setId(me.getId());
+                    asanaUser.setName(me.getName());
+                    asanaUser.setPhoto(me.getPhoto());
+                    asanaUser.setWorkspaces(me.getWorkspaces());
                 }
 
                 @Override
-                public void onError() {
-                    Log.d(LOG_TAG, "Error retrieving info");
+                public void onError(Throwable e) {
+                    Log.d(LOG_TAG, "Error retrieving user info " + e.getMessage());
                     Utility.invalidateAccessToken(getApplicationContext());
                     // Obtain a new token by calling new activity
                     refreshToken = Utility.getRefreshToken(getApplicationContext());
-//                    Intent loginIntent = new Intent(getApplicationContext(), LoginActivity.class);
-//                    loginIntent.putExtra(Utility.REFRESH_TOKEN_KEY, refreshToken);
-//                    getApplicationContext().startActivity(loginIntent);
-
                 }
             });
-            return userInfo;
+            return asanaUser;
         }
 
         @Override
-        protected void onPostExecute(JSONObject jsonObject) {
-            if (jsonObject == null && refreshToken != null) {
+        protected void onPostExecute(AsanaUser userInfo) {
+            if (userInfo == null && refreshToken != null) {
                 // Move to login activity
                 Intent loginIntent = new Intent(getApplicationContext(), LoginActivity.class);
                 loginIntent.putExtra(Utility.REFRESH_TOKEN_KEY, refreshToken);
                 getApplicationContext().startActivity(loginIntent);
                 return;
             }
-            // TODO: construct AsanaUser object instead
-            final String DATA = "data";
-            final String USER_NAME = "name";
-            final String WORKSPACES = "workspaces";
-            final String WORKSPACE_NAME = "name";
-            final String USER_PHOTO = "photo";
-            final String USER_PHOTO_URL = "image_60x60";
-            try {
-                mDrawerUserInfo.setText(userInfo.getJSONObject(DATA).getString(USER_NAME));
-                String userPhotoUrl = userInfo.getJSONObject(DATA).getJSONObject(USER_PHOTO)
-                        .getString(USER_PHOTO_URL);
 
-                /** Fetch user pic **/
-                FetchUserPicTask fetchUserPicTask = new FetchUserPicTask();
-                fetchUserPicTask.execute(userPhotoUrl);
+            mDrawerUserInfo.setText(userInfo.getName());
 
-                JSONArray workspaces = userInfo.getJSONObject(DATA).getJSONArray(WORKSPACES);
-                mDrawerTitles = new String[workspaces.length()];
-                for (int i = 0; i < workspaces.length(); i++) {
-                    JSONObject workspace = workspaces.getJSONObject(i);
-                    mDrawerTitles[i] = workspace.getString(WORKSPACE_NAME);
-                }
-                // Set the adapter for the list view
-                mWorkspaceAdapter = new ArrayAdapter<String>(getApplicationContext(),
-                        R.layout.drawer_list_item, mDrawerTitles);
-                mDrawerList.setAdapter(mWorkspaceAdapter);
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, "Error setting user info", e);
-                Utility.invalidateAccessToken(getApplicationContext());
-            } catch (NullPointerException e) {
-                Log.e(LOG_TAG, "Error", e);
-                Utility.invalidateAccessToken(getApplicationContext());
+            /** Fetch user pic **/
+            FetchUserPicTask fetchUserPicTask = new FetchUserPicTask();
+            fetchUserPicTask.execute(userInfo.getPhoto().getPhotoUrl());
+
+            List<AsanaWorkspace> workspaces = userInfo.getWorkspaces();
+            mDrawerTitles = new String[workspaces.size()];
+            for (int i = 0; i < workspaces.size(); i++) {
+                mDrawerTitles[i] = workspaces.get(i).getName();
             }
+            // Set the adapter for the list view
+            mWorkspaceAdapter = new ArrayAdapter<String>(getApplicationContext(),
+                    R.layout.drawer_list_item, mDrawerTitles);
+            mDrawerList.setAdapter(mWorkspaceAdapter);
         }
     }
 

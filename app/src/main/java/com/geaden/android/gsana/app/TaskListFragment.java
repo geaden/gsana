@@ -181,11 +181,6 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         super.onActivityCreated(savedInstanceState);
     }
 
-    private void getTasks() {
-        FetchAsanaTask task = new FetchAsanaTask(getActivity());
-        task.execute(getAccessToken());
-    }
-
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         CursorLoader cursorLoader;

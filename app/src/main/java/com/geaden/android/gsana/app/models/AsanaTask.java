@@ -106,5 +106,70 @@ public class AsanaTask extends BaseModel {
         return projects;
     }
 
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
 
+    public void setAssigneeId(long assigneeId) {
+        this.assigneeId = assigneeId;
+    }
+
+    public void setAssigneeStatus(String assigneeStatus) {
+        this.assigneeStatus = assigneeStatus;
+    }
+
+    public void setCompleted(String completed) {
+        this.completed = completed;
+    }
+
+    public void setCompletedAt(String completedAt) {
+        this.completedAt = completedAt;
+    }
+
+    public void setModifiedAt(String modifiedAt) {
+        this.modifiedAt = modifiedAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setDueOn(String dueOn) {
+        this.dueOn = dueOn;
+    }
+
+    public void setWorkspace(AsanaWorkspace workspace) {
+        this.workspace = workspace;
+    }
+
+    public void setProjects(List<AsanaProject> projects) {
+        this.projects = projects;
+    }
+
+    @Override
+    public String toString() {
+        JSONObject result = this.toJSONObject();
+        return result.toString();
+    }
+
+    @Override
+    public JSONObject toJSONObject() {
+        JSONObject result = super.toJSONObject();
+        if (result != null) {
+            try {
+                result.put(ASANA_TASK_NOTES, getNotes())
+                        .put(ASANA_TASK_ASSIGNEE_ID, getAssigneeId())
+                        .put(ASANA_TASK_WORKSPACE, getWorkspace().toJSONObject())
+                        .put(ASANA_TASK_PROJECTS, new JSONArray(getProjects()))
+                        .put(ASANA_TASK_COMPLETED, getCompleted())
+                        .put(ASANA_TASK_COMPLETED_AT, getCompletedAt())
+                        .put(ASANA_TASK_DUE_ON, getDueOn())
+                        .put(ASANA_TASK_MODIFIED_AT, getModifiedAt());
+            } catch (JSONException e) {
+
+            }
+        }
+
+        return result;
+    }
 }

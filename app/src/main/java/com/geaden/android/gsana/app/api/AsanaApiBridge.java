@@ -1,13 +1,13 @@
 package com.geaden.android.gsana.app.api;
 
-import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
-import com.geaden.android.gsana.app.LoginActivity;
-import com.geaden.android.gsana.app.Utility;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,21 +18,30 @@ import java.net.URL;
  * Class to organize communication with the Asana API.
  */
 public class AsanaApiBridge {
-    private final String LOG_TAG = this.getClass().getSimpleName();
+    private static final String LOG_TAG = AsanaApiBridge.class.getSimpleName();
 
-    // Version of the Asana API to use
-    public static String API_VEISION = "1.0";
+    // HTTP Methods
+    public static final String GET = "GET";
+    public static final String POST = "POST";
+    public static final String PUT = "PUT";
 
-    public static String ASANA_HOST = "app.asana.com";
+    // HTTP Responses
+    public static final int OK = 200;
+    public static final int BAD_REQUEST = 400;
+    public static final int UNAUTHORIZED = 401;
+    public static final int ACCESS_DENIED = 403;
+    public static final int METHOD_NOT_ALLOWED = 405;
 
-    public static int ASANA_PORT = 443;
-
-    private final int TOKEN_IDX = 0;
-
-    public String baseApiUrl(String asanaHost, int asanaPort) {
-        Uri.Builder builder = new Uri.Builder();
-        String baseApiUrl = builder.scheme("https://").path(asanaHost + ":" + asanaPort)
-                .appendPath("/api/").appendPath(API_VEISION).build().toString();
+    /**
+     * Gets base API url
+     * @return {@link String} The base URL to use for API requests
+     */
+    public static String baseApiUrl() {
+        Uri.Builder builder = Uri.parse("https://" + AsanaOptions.ASANA_HOST
+                + ":" + AsanaOptions.ASANA_PORT).buildUpon();
+        String baseApiUrl = builder
+                .appendPath("api")
+                .appendPath(AsanaOptions.API_VERSION).build().toString();
         return baseApiUrl;
     }
 
@@ -41,36 +50,54 @@ public class AsanaApiBridge {
      *
      * @param httpMethod HTTP request method to use (e.g. "POST")
      * @param path Path to call.
-     * @param params Parameters for API method; depends on method.
-     * @param options optional params
-     * @return API call result as a string
      */
-    public String request(String httpMethod, String path, String[] params, String[] options) {
+    public static void request(String httpMethod, String path, String accessToken,
+                        String params, AsanaCallback<AsanaResponse> callback) {
         httpMethod = httpMethod.toUpperCase();
-        Log.d(LOG_TAG, String.format("Client API request %s %s %s", httpMethod, path, params));
+        Log.d(LOG_TAG, String.format("Client API request %s %s", httpMethod, path));
 
         String responseData = null;
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
         try {
-            URL url = new URL(baseApiUrl(ASANA_HOST, ASANA_PORT) + path);
+            Log.d(LOG_TAG, "Url: " + baseApiUrl() + path);
+            URL url = new URL(baseApiUrl() + path);
             // Create the request to the Asana API, and open the connection
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod(httpMethod);
-            Log.v(LOG_TAG, String.format("Bearer %s", params[TOKEN_IDX]));
+            urlConnection.setRequestProperty("Client", "Geaden Asana Android Client. Version: 0.1-b");
+            Log.d(LOG_TAG, String.format("Bearer %s", accessToken));
+            urlConnection.setRequestProperty("Authorization", String.format("Bearer %s", accessToken));
+            if (params != null && (httpMethod.equals(POST) || httpMethod.equals(PUT))) {
+                urlConnection.setRequestProperty("Content-Type",
+                        "application/json");
 
-            urlConnection.setRequestProperty("Authorization", String.format("Bearer %s", params[TOKEN_IDX]));
+                urlConnection.setRequestProperty("Content-Length", "" +
+                        Integer.toString(params.getBytes().length));
+                urlConnection.setRequestProperty("Content-Language", "en-US");
+
+                urlConnection.setUseCaches (false);
+                urlConnection.setDoInput(true);
+                urlConnection.setDoOutput(true);
+
+                //Send request
+                DataOutputStream wr = new DataOutputStream (
+                        urlConnection.getOutputStream ());
+                wr.writeBytes (params);
+                wr.flush ();
+                wr.close ();
+            }
             urlConnection.connect();
-
             int serverCode = urlConnection.getResponseCode();
             // successful query
-            if (serverCode == 200) {
+            if (serverCode == OK) {
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
                 StringBuffer buffer = new StringBuffer();
                 if (inputStream == null) {
                     // Nothing to do.
-                    return null;
+                    Log.d(LOG_TAG, "No data...");
+                    return;
                 }
                 reader = new BufferedReader(new InputStreamReader(inputStream));
 
@@ -84,21 +111,28 @@ public class AsanaApiBridge {
 
                 if (buffer.length() == 0) {
                     // Stream was empty.  No point in parsing.
-                    return null;
+                    return;
                 }
                 responseData = buffer.toString();
                 Log.v(LOG_TAG, "Response: " + responseData);
-            } else if (serverCode == 401) {
-                return null;
+            } else if (serverCode == UNAUTHORIZED) {
+                Log.d(LOG_TAG, "serverCode 401");
+                callback.onError(new Exception("serverCode 401"));
             } else {
                 Log.e(LOG_TAG, "Server returned the following error code: " + serverCode, null);
-                return null;
+                callback.onError(new Exception("Server returned the following error code: " + serverCode));
+            }
+            try {
+                callback.onResult(new AsanaResponse(responseData));
+            } catch (AsanaResponse.MalformedResponseException e) {
+                e.printStackTrace();
+                callback.onError(e);
             }
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
-            // If the code didn't successfully get the weather data, there's no point in attemping
+            // If the code didn't successfully get the data, there's no point in attemping
             // to parse it.
-            return null;
+            callback.onError(e);
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -108,10 +142,10 @@ public class AsanaApiBridge {
                     reader.close();
                 } catch (final IOException e) {
                     Log.e(LOG_TAG, "Error closing stream", e);
+                    callback.onError(e);
                 }
             }
         }
-        return responseData;
     }
 
 }
