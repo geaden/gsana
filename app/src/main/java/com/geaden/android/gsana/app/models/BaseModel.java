@@ -12,7 +12,7 @@ public class BaseModel extends Model {
     private final String KEY_NAME = "name";
 
     // Base model fields
-    private long id;
+    private Long id;
     private String name;
 
     /**

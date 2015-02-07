@@ -33,12 +33,14 @@ public class AsanaUser extends BaseModel {
         photo = new UserPhoto(getJSONObject(userData, ASANA_USER_PHOTO));
         workspaces = new ArrayList<AsanaWorkspace>();
         JSONArray jsonWorkspaces = getJSONArray(userData, ASANA_USER_WORKSPACES);
-        for (int i = 0; i < jsonWorkspaces.length(); i++) {
-            try {
-                workspaces.add(new AsanaWorkspace(jsonWorkspaces.getJSONObject(i)));
-            } catch (JSONException e) {
-                Log.d(LOG_TAG, "Failed to get user worspace " + i);
-                e.printStackTrace();
+        if (jsonWorkspaces != null) {
+            for (int i = 0; i < jsonWorkspaces.length(); i++) {
+                try {
+                    workspaces.add(new AsanaWorkspace(jsonWorkspaces.getJSONObject(i)));
+                } catch (JSONException e) {
+                    Log.d(LOG_TAG, "Failed to get user workspace " + i);
+                    e.printStackTrace();
+                }
             }
         }
     }

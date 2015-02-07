@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 /**
  * {@link GsanaTasksAdapter} exposes a list of tasks
  * from {@link android.database.Cursor} to a {@link android.widget.ListView}
@@ -33,7 +35,7 @@ public class GsanaTasksAdapter extends CursorAdapter {
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        View view = LayoutInflater.from(context).inflate(R.layout.list_item_asana, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.list_asana_task_item, parent, false);
 
         ViewHolder viewHolder = new ViewHolder(view);
         view.setTag(viewHolder);
@@ -45,8 +47,6 @@ public class GsanaTasksAdapter extends CursorAdapter {
     public void bindView(View view, Context context, Cursor cursor) {
         ViewHolder viewHolder = (ViewHolder) view.getTag();
 
-        // TODO: set task project color
-
         // Read task name from cursor
         String taskName = cursor.getString(TaskListFragment.COL_TASK_NAME);
         // Find TextView and set task name on it.
@@ -55,6 +55,5 @@ public class GsanaTasksAdapter extends CursorAdapter {
         // Task due on
         String taskDueOn = cursor.getString(TaskListFragment.COL_TASK_DUE_ON);
         viewHolder.taskDueOnView.setText(taskDueOn);
-
     }
 }

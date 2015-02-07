@@ -15,10 +15,10 @@
             android:layout_height="match_parent"
             tools:context=".MainActivity"
             tools:ignore="MergeRootFrame" />
-        <FrameLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:id="@+id/floating_action_button" />
+        <!--<FrameLayout-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="fill_parent"-->
+            <!--android:id="@+id/floating_action_button" />-->
     </FrameLayout>
 
     <!-- The navigation drawer -->
@@ -57,11 +57,19 @@
         </LinearLayout>
 
         <!-- List of Workspaces -->
-        <ListView android:id="@+id/left_drawer_workspace_list"
+        <ListView android:id="@+id/left_drawer_workspaces_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:choiceMode="singleChoice"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:divider="@android:color/transparent" />
+
+        <!-- List of Projects -->
+        <ListView android:id="@+id/left_drawer_projects_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:choiceMode="singleChoice"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:divider="#c0c0c0c0" />
     </LinearLayout>
 </android.support.v4.widget.DrawerLayout>

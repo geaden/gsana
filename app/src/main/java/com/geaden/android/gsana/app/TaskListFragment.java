@@ -13,10 +13,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
+import com.geaden.android.gsana.app.data.GsanaContract;
+import com.geaden.android.gsana.app.data.GsanaContract.WorkspaceEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.ProjectEntry;
+import com.geaden.android.gsana.app.models.AsanaWorkspace;
 import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
 import com.melnykov.fab.FloatingActionButton;
 
@@ -26,19 +31,35 @@ import com.melnykov.fab.FloatingActionButton;
 public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor> {
     private final String LOG_TAG = getClass().getSimpleName();
 
-    private GsanaTasksAdapter mAsanaAdapter;
-    private ListView mListView;
+    private GsanaTasksAdapter mTasksAdapter;
+    private GsanaProjectsAdapter mProjectsAdapter;
 
+    private ListView mTaskListView;
     private int mPosition = ListView.INVALID_POSITION;
+
+    private String mCurrentWorkspace = "";
+
+    private TextView mTasksForToday;
 
     private static final String SELECTED_KEY = "selected_position";
 
-    private static final int ASANA_TASK_LOADER = 0;
-    private static final int ASANA_USER_LOADER = 1;
+    private static final int ASANA_WORKSPACES_LOADER = 0;
+    private static final int ASANA_TASK_LOADER = 1;
     private static final int ASANA_PROJECTS_LOADER = 2;
-    private static final int ASANA_WORKSPACES_LOADER = 3;
+    private static final int ASANA_USER_LOADER = 3;
 
     private FloatingActionButton mFabButton;
+
+    // Specify the order of columns for workspaces
+    private static final String[] ASANA_WORKSPACES_COLUMNS = {
+            WorkspaceEntry.TABLE_NAME + "." + WorkspaceEntry._ID,
+            WorkspaceEntry.COLUMN_WORKSPACE_ID,
+            WorkspaceEntry.COLUMN_WORKSPACE_NAME
+    };
+
+    // The indices that correspond to ASANA_WORKSPACES_COLUMNS
+    public static final int COL_WORKSPACE_ID = 1;
+    public static final int COL_WORKSPACE_NAME = 2;
 
     // Specify the order of columns for tasks
     private static final String[] ASANA_TASK_COLUMNS = {
@@ -58,13 +79,18 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         TaskEntry.COLUMN_TASK_PARENT_ID
     };
 
-    // Specify the order of columns for tasks
+    // Specify the order of columns for projects
     private static final String[] ASANA_PROJECTS_COLUMNS = {
         ProjectEntry.TABLE_NAME + "." + ProjectEntry._ID,
         ProjectEntry.COLUMN_PROJECT_ID,
         ProjectEntry.COLUMN_PROJECT_NAME,
         ProjectEntry.COLUMN_PROJECT_COLOR
     };
+
+    // The indices that correspond to ASANA_PROJECT_COLUMNS
+    public static final int COL_PROJECT_ID = 1;
+    public static final int COL_PROJECT_NAME = 2;
+    public static final int COL_PROJECT_COLOR = 3;
 
     // The indices that correspond to ASANA_TASK_COLUMNS
     public static final int COL_TASK_ID = 1;
@@ -82,6 +108,7 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     public static final int COL_TASK_MODIFIED_AT = 13;
     public static final int COL_TASK_PARENT_ID = 14;
 
+
     private static int mLastFirstVisibleItem;
     private static boolean mIsScrollingUp;
 
@@ -98,6 +125,11 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
          * TaskDetailFragment for when an item has been selected.
          */
         public void onItemSelected(String taskId);
+
+        /**
+         * Propagate project values
+         */
+        public void bindValues(CursorAdapter cursorAdapter, Cursor cursor);
     }
 
     /**
@@ -113,32 +145,23 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         return taskListFragment;
     }
 
-    public String getAccessToken() {
-        return getArguments().getString(MainActivity.ACCESS_TOKEN_KEY);
-    }
-
-    protected int getListViewScrollY() {
-        View topChild = mListView.getChildAt(0);
-        return topChild == null ? 0 : mListView.getFirstVisiblePosition() * topChild.getHeight() -
-                topChild.getTop();
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // The ArrayAdapter will take data from a source and
         // use it to populate the ListView it's attached to.
-        mAsanaAdapter = new GsanaTasksAdapter(getActivity(), null, 0);
+        mTasksAdapter = new GsanaTasksAdapter(getActivity(), null, 0);
+        mProjectsAdapter = new GsanaProjectsAdapter(getActivity(), null, 0);
 
         // TODO: set custom view binder
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        mListView = (ListView) rootView.findViewById(R.id.listview_asana);
-        mListView.setAdapter(mAsanaAdapter);
+        mTaskListView = (ListView) rootView.findViewById(R.id.listview_asana_tasks);
+        mTaskListView.setAdapter(mTasksAdapter);
 
         mFabButton = (FloatingActionButton) rootView
                 .findViewById(R.id.button_floating_action);
-        mFabButton.attachToListView(mListView);
+        mFabButton.attachToListView(mTaskListView);
 
         mFabButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -148,11 +171,18 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
             }
         });
 
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        String greetingTemplate = "Good %s, %s";
+
+        TextView greetingTextView = (TextView) rootView.findViewById(R.id.greeting);
+        greetingTextView.setText(String.format(greetingTemplate, Utility.getTimeOfTheDay(), "Gennady"));
+
+        mTasksForToday = (TextView) rootView.findViewById(R.id.today_tasks);
+
+        mTaskListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                Cursor cursor = mAsanaAdapter.getCursor();
+                Cursor cursor = mTasksAdapter.getCursor();
 
                 if (cursor != null && cursor.moveToPosition(position)) {
                     Log.v(LOG_TAG, "Task Id: " + cursor.getString(COL_TASK_ID));
@@ -177,7 +207,9 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        getLoaderManager().initLoader(ASANA_WORKSPACES_LOADER, null, this);
         getLoaderManager().initLoader(ASANA_TASK_LOADER, null, this);
+        getLoaderManager().initLoader(ASANA_PROJECTS_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -191,19 +223,28 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
                         getActivity(),
                         TaskEntry.CONTENT_URI,
                         ASANA_TASK_COLUMNS,
-                        null,
-                        null,
+                        TaskEntry.COLUMN_TASK_WORKSPACE_ID + " = ?",
+                        new String[]{mCurrentWorkspace},
                         null);
                 break;
             case ASANA_PROJECTS_LOADER:
                 cursorLoader = new CursorLoader(
                         getActivity(),
                         ProjectEntry.CONTENT_URI,
-                        ASANA_TASK_COLUMNS,
+                        ASANA_PROJECTS_COLUMNS,
+                        ProjectEntry.COLUMN_PROJECT_WORKSPACE_ID + " = ?",
+                        new String[]{mCurrentWorkspace},
+                        null);
+                break;
+            case ASANA_WORKSPACES_LOADER:
+                cursorLoader = new CursorLoader(
+                        getActivity(),
+                        WorkspaceEntry.CONTENT_URI,
+                        ASANA_WORKSPACES_COLUMNS,
                         null,
                         null,
                         null);
-            case ASANA_WORKSPACES_LOADER:
+                break;
             case ASANA_USER_LOADER:
             default:
                 cursorLoader = null;
@@ -227,24 +268,43 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     @Override
     public void onResume() {
         super.onResume();
+        getLoaderManager().restartLoader(ASANA_WORKSPACES_LOADER, null, this);
         getLoaderManager().restartLoader(ASANA_TASK_LOADER, null, this);
+        getLoaderManager().restartLoader(ASANA_PROJECTS_LOADER, null, this);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor data) {
-        if (data.getCount() == 0) {
-            GsanaSyncAdapter.syncImmediately(getActivity());
+        switch (cursorLoader.getId()) {
+            case ASANA_PROJECTS_LOADER:
+                // Propagate values to project loader
+                mProjectsAdapter.swapCursor(data);
+                ((Callback) getActivity()).bindValues(mProjectsAdapter, data);
+                break;
+            case ASANA_TASK_LOADER:
+                mTasksAdapter.swapCursor(data);
+                int tasksForToday = data.getCount();
+                mTasksForToday.setText(String.format("You have %s %s for today", tasksForToday,
+                        tasksForToday == 1 ? "task" : "tasks"));
+                break;
+            case ASANA_WORKSPACES_LOADER:
+                if (data.moveToFirst()) {
+                    mCurrentWorkspace = data.getString(COL_WORKSPACE_ID);
+                }
+                break;
+            default:
+                Log.d(LOG_TAG, "Loader: " + cursorLoader.getId());
         }
-        mAsanaAdapter.swapCursor(data);
         if (mPosition != ListView.INVALID_POSITION) {
             // If we don't need to restart the loader, and there's a desired position to restore
             // to, do so now.
-            mListView.smoothScrollToPosition(mPosition);
+            mTaskListView.smoothScrollToPosition(mPosition);
         }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-        mAsanaAdapter.swapCursor(null);
+        mTasksAdapter.swapCursor(null);
+        mProjectsAdapter.swapCursor(null);
     }
 }

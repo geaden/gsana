@@ -7,8 +7,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -20,20 +18,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.api.AsanaCallback;
-import com.geaden.android.gsana.app.api.AsanaResponse;
 import com.geaden.android.gsana.app.models.AsanaUser;
 import com.geaden.android.gsana.app.models.AsanaWorkspace;
 
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +55,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
     private ListView mDrawerList;
     private TextView mDrawerUserInfo;
     private ImageView mDrawerUserPic;
+    private AsanaWorkspace mSelectedWorkspace;
 
     private String[] mDrawerTitles;
     private CharSequence mDrawerTitle;
@@ -92,8 +88,8 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             mDrawerToggle = new ActionBarDrawerToggle(
                     this,                  /* host Activity */
                     mDrawerLayout,         /* DrawerLayout object */
-                    R.string.drawer_open,         /* "open drawer" description */
-                    R.string.drawer_close         /* "close drawer" description */
+                    R.string.drawer_open,  /* "open drawer" description */
+                    R.string.drawer_close  /* "close drawer" description */
             ) {
 
                 /** Called when a drawer has settled in a completely closed state. */
@@ -117,7 +113,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
 
-            mDrawerList = (ListView) findViewById(R.id.left_drawer_workspace_list);
+            mDrawerList = (ListView) findViewById(R.id.left_drawer_workspaces_list);
 
             mDrawerUserInfo = (TextView) findViewById(R.id.left_drawer_user_name);
             mDrawerUserPic = (ImageView) findViewById(R.id.left_drawer_user_pic);
@@ -193,12 +189,12 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
 
     /** Swaps fragments in the main content view */
     private void selectItem(int position) {
-        // Create a new fragment and specify the planet to show based on position
-
         // Highlight the selected item, update the title, and close the drawer
         mDrawerList.setItemChecked(position, true);
-        setTitle(mDrawerTitles[position]);
-        mDrawerLayout.closeDrawer(mDrawerLayout);
+        // TODO: Query for projects
+        Toast.makeText(getApplicationContext(), "Selected " + position, Toast.LENGTH_SHORT).show();
+//        setTitle(mDrawerTitles[position]);
+//        mDrawerLayout.closeDrawer(mDrawerList);
     }
 
     @Override
@@ -268,6 +264,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
                 Intent loginIntent = new Intent(getApplicationContext(), LoginActivity.class);
                 loginIntent.putExtra(Utility.REFRESH_TOKEN_KEY, refreshToken);
                 getApplicationContext().startActivity(loginIntent);
+                finish();
                 return;
             }
 
@@ -286,6 +283,9 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             mWorkspaceAdapter = new ArrayAdapter<String>(getApplicationContext(),
                     R.layout.drawer_list_item, mDrawerTitles);
             mDrawerList.setAdapter(mWorkspaceAdapter);
+            // Select first workspace by default
+            mDrawerList.setSelection(0);
+            mSelectedWorkspace = workspaces.get(0);
         }
     }
 
@@ -295,5 +295,18 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
         Intent intent = new Intent(this, TaskDetailActivity.class)
                 .putExtra(TaskDetailActivity.TASK_KEY, taskId);
         startActivity(intent);
+    }
+
+    @Override
+    public void bindValues(CursorAdapter cursorAdapter, Cursor cursor) {
+        // Bind data to drawer layout
+        if (cursor.getCount() > 0) {
+            if (mDrawerLayout == null) {
+                mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+            }
+            cursorAdapter.bindView(mDrawerLayout, getApplicationContext(), cursor);
+        } else {
+            Log.d(LOG_TAG, "No data returned");
+        }
     }
 }

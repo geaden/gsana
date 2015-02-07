@@ -64,9 +64,14 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
         if (cVVector.size() > 0) {
             ContentValues[] cvArray = new ContentValues[cVVector.size()];
             cVVector.toArray(cvArray);
-            int rowsInserted = mContext.getContentResolver()
-                    .bulkInsert(contentUri, cvArray);
-            Log.d(LOG_TAG, "inserted " + rowsInserted + " tasks");
+            int rowsInserted = 0;
+            try {
+                rowsInserted = mContext.getContentResolver()
+                        .bulkInsert(contentUri, cvArray);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error performing insert on " + contentUri.toString());
+            }
+            Log.d(LOG_TAG, "inserted " + rowsInserted);
             // Use a DEBUG variable to gate whether or not you do this, so you can easily
             // turn it on and off, and so that it's easy to see what you can rip out if
             // you ever want to remove it.
@@ -95,9 +100,10 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
 
     /**
      * Performs projects insertion
-     * @param projects
+     * @param projects list of projects to insert
      */
     private void performaProjectsInsert(List<AsanaProject> projects) {
+        Log.d(LOG_TAG, "Performing Projects Insertion");
         Vector<ContentValues> cVVector = new Vector<ContentValues>(projects.size());
         for (AsanaProject project : projects) {
             ContentValues values = new ContentValues();
@@ -121,10 +127,13 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
         // Get and insert the new workspaces information into the database
         Vector<ContentValues> cVVector = new Vector<ContentValues>(workspaces.size());
         int i = 0;
+        mDefaultWorkspace = null;
         for (AsanaWorkspace workspace : workspaces) {
             ContentValues workspaceValues = new ContentValues();
-            if (i++ == 0) mDefaultWorkspace = workspace;
-            Log.d(LOG_TAG, "Default workspace " + mDefaultWorkspace.toString());
+            if (mDefaultWorkspace == null) {
+                mDefaultWorkspace = workspace;
+                Log.d(LOG_TAG, "Default workspace " + mDefaultWorkspace.toString());
+            }
             workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_ID, workspace.getId());
             workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_NAME, workspace.getName());
             cVVector.add(workspaceValues);
@@ -152,7 +161,8 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
             taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_NOTES, task.getNotes());
             taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED_AT, task.getCompletedAt());
             taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_MODIFIED_AT, task.getModifiedAt());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_ID, task.getAssigneeId());
+            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_ID,
+                    task.getAssignee() != null ? task.getAssignee().getId() : null);
 
 
             if (task.getProjects().size() > 0) {
@@ -182,63 +192,65 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
             public void onResult(List<AsanaWorkspace> workspaces) {
                 Log.d(LOG_TAG, "Retrieved workspaces");
                 performWorkspacesInsert(workspaces);
-                asanaApi.tasks(mDefaultWorkspace, new AsanaCallback<List<AsanaTask>>() {
-                    @Override
-                    public void onResult(List<AsanaTask> asanaTasks) {
-                        for (final AsanaTask asanaTask : asanaTasks) {
-                            asanaApi.getTaskDetail(asanaTask, new AsanaCallback<AsanaTask>() {
-                                @Override
-                                public void onResult(AsanaTask value) {
-                                    asanaTask.setAssigneeId(value.getAssigneeId());
-                                    asanaTask.setNotes(value.getNotes());
-                                    asanaTask.setAssigneeStatus(value.getAssigneeStatus());
-                                    asanaTask.setCompleted(value.getCompleted());
-                                    asanaTask.setDueOn(value.getDueOn());
-                                    asanaTask.setWorkspace(value.getWorkspace());
-                                }
+                for (AsanaWorkspace asanaWorkspace : workspaces) {
+                    asanaApi.tasks(asanaWorkspace, new AsanaCallback<List<AsanaTask>>() {
+                        @Override
+                        public void onResult(List<AsanaTask> asanaTasks) {
+                            for (final AsanaTask asanaTask : asanaTasks) {
+                                asanaApi.getTaskDetail(asanaTask, new AsanaCallback<AsanaTask>() {
+                                    @Override
+                                    public void onResult(AsanaTask value) {
+                                        asanaTask.setAssigneeId(value.getAssignee());
+                                        asanaTask.setNotes(value.getNotes());
+                                        asanaTask.setAssigneeStatus(value.getAssigneeStatus());
+                                        asanaTask.setCompleted(value.getCompleted());
+                                        asanaTask.setDueOn(value.getDueOn());
+                                        asanaTask.setWorkspace(value.getWorkspace());
+                                    }
 
-                                @Override
-                                public void onError(Throwable exception) {
-                                    Log.d(LOG_TAG, exception.getMessage());
-                                }
-                            });
+                                    @Override
+                                    public void onError(Throwable exception) {
+                                        Log.d(LOG_TAG, exception.getMessage());
+                                    }
+                                });
+                            }
+                            performTasksInsertion(asanaTasks);
                         }
-                        performTasksInsertion(asanaTasks);
-                    }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.e(LOG_TAG, "Error retrieving tasks " + e.getMessage());
-                    }
-                });
-                asanaApi.projects(mDefaultWorkspace, new AsanaCallback<List<AsanaProject>>() {
-                    @Override
-                    public void onResult(List<AsanaProject> asanaProjects) {
-                        for (final AsanaProject asanaProject : asanaProjects) {
-                            asanaApi.getProjectDetails(asanaProject, new AsanaCallback<AsanaProject>() {
-                                @Override
-                                public void onResult(AsanaProject value) {
-                                    asanaProject.setColor(value.getColor());
-                                    asanaProject.setWorkspace(value.getWorkspace());
-                                    asanaProject.setNotes(value.getNotes());
-                                    asanaProject.setArchived(value.getArchived());
-                                    asanaProject.setCreatedAt(value.getCreatedAt());
-                                }
-
-                                @Override
-                                public void onError(Throwable e) {
-                                    Log.d(LOG_TAG, "Error Retrieving project details " + e.getMessage());
-                                }
-                            });
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.e(LOG_TAG, "Error retrieving tasks " + e.getMessage());
                         }
-                        performaProjectsInsert(asanaProjects);
-                    }
+                    });
+                    asanaApi.projects(asanaWorkspace, new AsanaCallback<List<AsanaProject>>() {
+                        @Override
+                        public void onResult(List<AsanaProject> asanaProjects) {
+                            for (final AsanaProject asanaProject : asanaProjects) {
+                                asanaApi.getProjectDetails(asanaProject, new AsanaCallback<AsanaProject>() {
+                                    @Override
+                                    public void onResult(AsanaProject value) {
+                                        asanaProject.setColor(value.getColor());
+                                        asanaProject.setWorkspace(value.getWorkspace());
+                                        asanaProject.setNotes(value.getNotes());
+                                        asanaProject.setArchived(value.getArchived());
+                                        asanaProject.setCreatedAt(value.getCreatedAt());
+                                    }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.d(LOG_TAG, "Error retrieving projects " + e.getMessage());
-                    }
-                });
+                                    @Override
+                                    public void onError(Throwable e) {
+                                        Log.d(LOG_TAG, "Error Retrieving project details " + e.getMessage());
+                                    }
+                                });
+                            }
+                            performaProjectsInsert(asanaProjects);
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.d(LOG_TAG, "Error retrieving projects " + e.getMessage());
+                        }
+                    });
+                }
             }
 
             @Override

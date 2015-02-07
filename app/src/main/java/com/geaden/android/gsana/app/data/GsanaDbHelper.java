@@ -17,7 +17,7 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
     private static GsanaDbHelper sInstance;
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
 
     public static final String DATABASE_NAME = "gsana.db";
 

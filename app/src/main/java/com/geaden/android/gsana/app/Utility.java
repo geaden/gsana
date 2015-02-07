@@ -2,6 +2,9 @@ package com.geaden.android.gsana.app;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
+
+import java.util.Calendar;
 
 /**
  * Common utils.
@@ -78,5 +81,37 @@ public class Utility {
                 Context.MODE_PRIVATE).edit();
         editor.remove(ACCESS_TOKEN_KEY);
         editor.commit();
+    }
+
+    /**
+     * Gets time of the day
+     * @return {String} time of the day
+     */
+    public static String getTimeOfTheDay() {
+        // Greeting text
+        String[] timesOfDay = {"Morning", "Day", "Evening", "Night"};
+
+        // Correspondent greeting index
+        final int MORNING = 0;
+        final int DAY = 1;
+        final int EVENING = 2;
+        final int NIGHT = 3;
+
+        Calendar c = Calendar.getInstance();
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        // Greeting template string
+        String timeOfDay = "";
+        Log.d(Utility.class.getSimpleName(), "Hour: " + hour);
+        if (hour >= 5 && hour < 12) {
+            timeOfDay = timesOfDay[MORNING];
+        } else if (hour >= 12 && hour < 16) {
+            timeOfDay = timesOfDay[DAY];
+        } else if (hour >= 16 && hour < 21) {
+            timeOfDay = timesOfDay[EVENING];
+        } else {
+            timeOfDay = timesOfDay[NIGHT];
+        }
+        Log.d(Utility.class.getSimpleName(), "Time of day: " + timeOfDay);
+        return timeOfDay;
     }
 }

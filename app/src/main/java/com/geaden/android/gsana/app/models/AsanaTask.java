@@ -14,7 +14,7 @@ public class AsanaTask extends BaseModel {
     // Json tasks keys
     private final String ASANA_TASK_NOTES = "notes";
     private final String ASANA_TASK_WORKSPACE = "workspace";
-    private final String ASANA_TASK_ASSIGNEE_ID = "assignee_id";
+    private final String ASANA_TASK_ASSIGNEE = "assignee";
     private final String ASANA_TASK_MODIFIED_AT = "modified_at";
     private final String ASANA_TASK_PROJECTS = "projects";
     private final String ASANA_TASK_DUE_ON = "due_on";
@@ -22,10 +22,11 @@ public class AsanaTask extends BaseModel {
     private final String ASANA_TASK_CREATED_AT = "created_at";
     private final String ASANA_TASK_COMPLETED_AT = "completed_at";
     private final String ASANA_TASK_ASSIGNEE_STATUS = "assignee_status";
+    private final String ASANA_TASK_FOLLOWERS = "followers";
 
     // Task fields
     private String notes;
-    private long assigneeId;
+    private AsanaUser assignee;
     private String assigneeStatus;
     private String completed;
     private String completedAt;
@@ -43,7 +44,7 @@ public class AsanaTask extends BaseModel {
         super(taskData);
         notes = getStringValue(taskData, ASANA_TASK_NOTES);
         assigneeStatus = getStringValue(taskData, ASANA_TASK_ASSIGNEE_STATUS);
-        assigneeId = getLongValue(taskData, ASANA_TASK_ASSIGNEE_ID);
+        assignee = new AsanaUser(getJSONObject(taskData, ASANA_TASK_ASSIGNEE));
         completed = getStringValue(taskData, ASANA_TASK_COMPLETED);
         completedAt = getStringValue(taskData, ASANA_TASK_COMPLETED_AT);
         modifiedAt = getStringValue(taskData, ASANA_TASK_MODIFIED_AT);
@@ -70,8 +71,8 @@ public class AsanaTask extends BaseModel {
         return notes;
     }
 
-    public long getAssigneeId() {
-        return assigneeId;
+    public AsanaUser getAssignee() {
+        return assignee;
     }
 
     public String getAssigneeStatus() {
@@ -110,8 +111,8 @@ public class AsanaTask extends BaseModel {
         this.notes = notes;
     }
 
-    public void setAssigneeId(long assigneeId) {
-        this.assigneeId = assigneeId;
+    public void setAssigneeId(AsanaUser assignee) {
+        this.assignee = assignee;
     }
 
     public void setAssigneeStatus(String assigneeStatus) {
@@ -149,7 +150,11 @@ public class AsanaTask extends BaseModel {
     @Override
     public String toString() {
         JSONObject result = this.toJSONObject();
-        return result.toString();
+        try {
+            return result.toString(4);
+        } catch (JSONException e) {
+            return result.toString();
+        }
     }
 
     @Override
@@ -158,7 +163,7 @@ public class AsanaTask extends BaseModel {
         if (result != null) {
             try {
                 result.put(ASANA_TASK_NOTES, getNotes())
-                        .put(ASANA_TASK_ASSIGNEE_ID, getAssigneeId())
+                        .put(ASANA_TASK_ASSIGNEE, getAssignee())
                         .put(ASANA_TASK_WORKSPACE, getWorkspace().toJSONObject())
                         .put(ASANA_TASK_PROJECTS, new JSONArray(getProjects()))
                         .put(ASANA_TASK_COMPLETED, getCompleted())

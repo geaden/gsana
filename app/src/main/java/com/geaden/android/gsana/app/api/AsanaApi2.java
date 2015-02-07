@@ -136,10 +136,21 @@ public class AsanaApi2 {
      * @param asanaTask the task to get details for
      * @param callback {@link com.geaden.android.gsana.app.api.AsanaCallback} callback for data
      */
-    public void getTaskDetail(AsanaTask asanaTask, AsanaCallback callback) {
+    public void getTaskDetail(AsanaTask asanaTask, final AsanaCallback<AsanaTask> callback) {
         Log.i(LOG_TAG, "Getting task details " + asanaTask.getId());
         AsanaApiBridge.request(AsanaApiBridge.GET, "/tasks/" + asanaTask.getId(),
-                mAccessToken, null, callback);
+                mAccessToken, null, new AsanaCallback<AsanaResponse>() {
+                    @Override
+                    public void onResult(AsanaResponse value) {
+                        JSONObject data = (JSONObject) value.getData();
+                        callback.onResult(new AsanaTask(data));
+                    }
+
+                    @Override
+                    public void onError(Throwable exception) {
+                        callback.onError(exception);
+                    }
+                });
     }
 
 
@@ -208,7 +219,7 @@ public class AsanaApi2 {
      */
     public void projects(AsanaWorkspace workspace, final AsanaCallback<List<AsanaProject>> callback) {
         // retrieve projects
-        Log.i(LOG_TAG, "Requesting projects");
+        Log.i(LOG_TAG, "Requesting projects for worspace " + workspace.getId());
         AsanaApiBridge.request(AsanaApiBridge.GET, "/workspaces/" + workspace.getId() + "/projects",
                 mAccessToken, null, new AsanaCallback<AsanaResponse>() {
                     @Override
@@ -240,7 +251,7 @@ public class AsanaApi2 {
      * @param callback {@link com.geaden.android.gsana.app.api.AsanaCallback} callback for data
      */
     public void getProjectDetails(final AsanaProject project, final AsanaCallback<AsanaProject> callback) {
-        Log.i(LOG_TAG, "Requesting project " + project.getId());
+        Log.i(LOG_TAG, "Requesting project details " + project.getId());
         AsanaApiBridge.request(AsanaApiBridge.GET, "projects/" + project.getId(),
                 mAccessToken, null, new AsanaCallback<AsanaResponse>() {
                     @Override

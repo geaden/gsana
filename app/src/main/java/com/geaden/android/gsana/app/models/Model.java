@@ -19,6 +19,9 @@ public abstract class Model {
      * @return value
      */
     public String getStringValue(JSONObject data, String key) {
+        if (data == null) {
+            return null;
+        }
         if (data.has(key)) {
             try {
                 return data.getString(key);
@@ -36,6 +39,9 @@ public abstract class Model {
      * @return value
      */
     public Long getLongValue(JSONObject data, String key) {
+        if (data == null) {
+            return null;
+        }
         if (data.has(key)) {
             try {
                 return data.getLong(key);
@@ -53,6 +59,9 @@ public abstract class Model {
      * @return value
      */
     public JSONObject getJSONObject(JSONObject data, String key) {
+        if (data == null) {
+            return null;
+        }
         if (data.has(key)) {
             try {
                 return data.getJSONObject(key);
@@ -70,6 +79,9 @@ public abstract class Model {
      * @return value as JSONArray
      */
     public JSONArray getJSONArray(JSONObject data, String key) {
+        if (data == null) {
+            return null;
+        }
         if (data.has(key)) {
             try {
                 return data.getJSONArray(key);

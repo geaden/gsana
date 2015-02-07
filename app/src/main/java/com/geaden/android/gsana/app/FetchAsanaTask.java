@@ -90,7 +90,7 @@ public class FetchAsanaTask extends AsyncTask<String, Void, Void> {
             taskValues.put(TaskEntry.COLUMN_TASK_NOTES, task.getNotes());
             taskValues.put(TaskEntry.COLUMN_TASK_COMPLETED_AT, task.getCompletedAt());
             taskValues.put(TaskEntry.COLUMN_TASK_MODIFIED_AT, task.getModifiedAt());
-            taskValues.put(TaskEntry.COLUMN_TASK_ASSIGNEE_ID, task.getAssigneeId());
+            taskValues.put(TaskEntry.COLUMN_TASK_ASSIGNEE_ID, task.getAssignee() != null ? task.getAssignee().getId() : null);
             taskValues.put(TaskEntry.COLUMN_TASK_PROJECT_ID, task.getProjects().get(0).getId());
             cVVector.add(taskValues);
 

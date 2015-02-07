@@ -17,17 +17,19 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:id="@+id/greeting"
                 android:text="Good Day Gennady"
                 android:gravity="center"
                 android:textSize="36dp"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:id="@+id/today_tasks"
                 android:text="You have 4 task for Today"
                 android:gravity="center"
                 android:textSize="14dp"/>
             <ListView
-                android:id="@+id/listview_asana"
+                android:id="@+id/listview_asana_tasks"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
         </LinearLayout>
