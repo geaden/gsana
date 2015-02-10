@@ -17,10 +17,12 @@ public class AsanaUser extends BaseModel {
 
     // JSON keys
     private final String ASANA_USER_WORKSPACES = "workspaces";
-    final String ASANA_USER_PHOTO = "photo";
-    final String ASANA_USER_PHOTO_URL = "image_60x60";
+    private final String ASANA_USER_PHOTO = "photo";
+    private final String ASANA_USER_EMAIL = "email";
+    private final String ASANA_USER_PHOTO_URL = "image_60x60";
 
     // User fields
+    private String email;
     private UserPhoto photo;
     private List<AsanaWorkspace> workspaces;
 
@@ -30,6 +32,7 @@ public class AsanaUser extends BaseModel {
      */
     public AsanaUser(JSONObject userData) {
         super(userData);
+        email = getStringValue(userData, ASANA_USER_EMAIL);
         photo = new UserPhoto(getJSONObject(userData, ASANA_USER_PHOTO));
         workspaces = new ArrayList<AsanaWorkspace>();
         JSONArray jsonWorkspaces = getJSONArray(userData, ASANA_USER_WORKSPACES);
@@ -65,6 +68,10 @@ public class AsanaUser extends BaseModel {
 
     public List<AsanaWorkspace> getWorkspaces() {
         return workspaces;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public void setPhoto(UserPhoto photo) {

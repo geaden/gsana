@@ -11,11 +11,15 @@ import android.content.SyncRequest;
 import android.content.SyncResult;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.CursorAdapter;
 
+import com.geaden.android.gsana.app.GsanaUserAdapter;
 import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.api.AsanaApi2;
@@ -24,15 +28,22 @@ import com.geaden.android.gsana.app.api.AsanaResponse;
 import com.geaden.android.gsana.app.data.GsanaContract;
 import com.geaden.android.gsana.app.models.AsanaProject;
 import com.geaden.android.gsana.app.models.AsanaTask;
+import com.geaden.android.gsana.app.models.AsanaUser;
 import com.geaden.android.gsana.app.models.AsanaWorkspace;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+
+import javax.net.ssl.HttpsURLConnection;
 
 
 public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
@@ -45,7 +56,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
     public static final int SYNC_INTERVAL = 60 * 180;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
 
-    private boolean DEBUG = true;
+    private boolean DEBUG = false;
 
     private final Context mContext;
 
@@ -56,11 +67,11 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     /**
-     * Performs data insert
+     * Performs insert if no data found or update.
      * @param contentUri content uri to call data insertion
      * @param cVVector
      */
-    private void performDataInsert(Uri contentUri, Vector<ContentValues> cVVector) {
+    private void insertOrUpdate(Uri contentUri, Vector<ContentValues> cVVector) {
         if (cVVector.size() > 0) {
             ContentValues[] cvArray = new ContentValues[cVVector.size()];
             cVVector.toArray(cvArray);
@@ -116,7 +127,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
             values.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_MODIFIED_AT, project.getModifiedAt());
             cVVector.add(values);
         }
-        performDataInsert(GsanaContract.ProjectEntry.CONTENT_URI, cVVector);
+        insertOrUpdate(GsanaContract.ProjectEntry.CONTENT_URI, cVVector);
     }
 
     /**
@@ -126,19 +137,20 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
     private void performWorkspacesInsert(List<AsanaWorkspace> workspaces) {
         // Get and insert the new workspaces information into the database
         Vector<ContentValues> cVVector = new Vector<ContentValues>(workspaces.size());
-        int i = 0;
         mDefaultWorkspace = null;
         for (AsanaWorkspace workspace : workspaces) {
             ContentValues workspaceValues = new ContentValues();
             if (mDefaultWorkspace == null) {
                 mDefaultWorkspace = workspace;
+                Utility.putSettingsStringValue(mContext, Utility.DEFAULT_WORKSPACE_KEY,
+                        String.valueOf(mDefaultWorkspace.getId()));
                 Log.d(LOG_TAG, "Default workspace " + mDefaultWorkspace.toString());
             }
             workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_ID, workspace.getId());
             workspaceValues.put(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_NAME, workspace.getName());
             cVVector.add(workspaceValues);
         }
-        performDataInsert(GsanaContract.WorkspaceEntry.CONTENT_URI, cVVector);
+        insertOrUpdate(GsanaContract.WorkspaceEntry.CONTENT_URI, cVVector);
     }
 
     /**
@@ -172,18 +184,76 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
 
             cVVector.add(taskValues);
         }
-        performDataInsert(GsanaContract.TaskEntry.CONTENT_URI, cVVector);
+        insertOrUpdate(GsanaContract.TaskEntry.CONTENT_URI, cVVector);
     }
+
+    /**
+     * Fetches user picture from url
+     * @param urlString the url to fetch data from
+     * @return {@link android.graphics.Bitmap} user picture
+     */
+    private Bitmap fetchUserPic(String urlString) {
+        Bitmap userPic = null;
+        try {
+            URL url = new URL(urlString);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            userPic = BitmapFactory.decodeStream(input);
+        } catch (IOException e) {
+            Log.e(LOG_TAG, e.getMessage());
+        }
+        return userPic;
+    }
+
+    /**
+     * Performs user data insertion
+     * @param asanaUser returned asana user data
+     */
+    private void performUserInsertion(AsanaUser asanaUser) {
+        // Get and insert user information into the database
+        Vector<ContentValues> cVVector = new Vector<ContentValues>(1);
+        ContentValues userValues = new ContentValues();
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_ID, asanaUser.getId());
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_NAME, asanaUser.getName());
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_EMAIL, asanaUser.getEmail());
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_PHOTO_60, asanaUser.getPhoto().getPhotoUrl());
+        /** Fetch user picture and insert to database **/
+        Bitmap userPic = fetchUserPic(asanaUser.getPhoto().getPhotoUrl());
+        ByteArrayOutputStream outStr = new ByteArrayOutputStream();
+        userPic.compress(Bitmap.CompressFormat.PNG, 100, outStr);
+        byte[] blob = outStr.toByteArray();
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_PHOTO, blob);
+        cVVector.add(userValues);
+        insertOrUpdate(GsanaContract.UserEntry.CONTENT_URI, cVVector);
+    }
+
 
     @Override
     public void onPerformSync(Account account, Bundle bundle, String authority,
                               ContentProviderClient contentProviderClient, SyncResult syncResult) {
-        Log.d(LOG_TAG, "Start sync");
         // Getting the access token to send to the Api
         String accessToken = Utility.getAccessToken(mContext);
 
         // Get instance AsanaApiClient
-        final AsanaApi2 asanaApi = AsanaApi2.getInstance(mContext, accessToken);
+        final AsanaApi2 asanaApi = AsanaApi2.getInstance(mContext);
+
+        // Retrieve user info
+        asanaApi.me(new AsanaCallback<AsanaUser>() {
+            @Override
+            public void onResult(AsanaUser user) {
+                // Put user id to shared preferences
+                Utility.putSettingsStringValue(mContext, Utility.CURRENT_USER_KEY,
+                        String.valueOf(user.getId()));
+                performUserInsertion(user);
+            }
+
+            @Override
+            public void onError(Throwable exception) {
+                Log.e(LOG_TAG, "Error retrieving user info " + exception.getMessage());
+            }
+        });
 
         // Order matters, as we should obtain default workspace id first
         asanaApi.workspaces(new AsanaCallback<List<AsanaWorkspace>>() {

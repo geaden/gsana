@@ -13,16 +13,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.geaden.android.gsana.app.data.GsanaContract;
-import com.geaden.android.gsana.app.data.GsanaContract.WorkspaceEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
-import com.geaden.android.gsana.app.data.GsanaContract.ProjectEntry;
-import com.geaden.android.gsana.app.models.AsanaWorkspace;
-import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
+
 import com.melnykov.fab.FloatingActionButton;
 
 /**
@@ -43,74 +38,9 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
 
     private static final String SELECTED_KEY = "selected_position";
 
-    private static final int ASANA_WORKSPACES_LOADER = 0;
-    private static final int ASANA_TASK_LOADER = 1;
-    private static final int ASANA_PROJECTS_LOADER = 2;
-    private static final int ASANA_USER_LOADER = 3;
+    private static final int ASANA_TASK_LOADER = 0;
 
     private FloatingActionButton mFabButton;
-
-    // Specify the order of columns for workspaces
-    private static final String[] ASANA_WORKSPACES_COLUMNS = {
-            WorkspaceEntry.TABLE_NAME + "." + WorkspaceEntry._ID,
-            WorkspaceEntry.COLUMN_WORKSPACE_ID,
-            WorkspaceEntry.COLUMN_WORKSPACE_NAME
-    };
-
-    // The indices that correspond to ASANA_WORKSPACES_COLUMNS
-    public static final int COL_WORKSPACE_ID = 1;
-    public static final int COL_WORKSPACE_NAME = 2;
-
-    // Specify the order of columns for tasks
-    private static final String[] ASANA_TASK_COLUMNS = {
-        TaskEntry.TABLE_NAME + "." + TaskEntry._ID,
-        TaskEntry.COLUMN_TASK_ID,
-        TaskEntry.COLUMN_TASK_NAME,
-        TaskEntry.COLUMN_TASK_NOTES,
-        TaskEntry.COLUMN_TASK_COMPLETED,
-        TaskEntry.COLUMN_TASK_COMPLETED_AT,
-        TaskEntry.COLUMN_TASK_CREATED_AT,
-        TaskEntry.COLUMN_TASK_PROJECT_ID,
-        TaskEntry.COLUMN_TASK_WORKSPACE_ID,
-        TaskEntry.COLUMN_TASK_ASSIGNEE_ID,
-        TaskEntry.COLUMN_TASK_ASSIGNEE_STATUS,
-        TaskEntry.COLUMN_TASK_DUE_ON,
-        TaskEntry.COLUMN_TASK_MODIFIED_AT,
-        TaskEntry.COLUMN_TASK_PARENT_ID
-    };
-
-    // Specify the order of columns for projects
-    private static final String[] ASANA_PROJECTS_COLUMNS = {
-        ProjectEntry.TABLE_NAME + "." + ProjectEntry._ID,
-        ProjectEntry.COLUMN_PROJECT_ID,
-        ProjectEntry.COLUMN_PROJECT_NAME,
-        ProjectEntry.COLUMN_PROJECT_COLOR
-    };
-
-    // The indices that correspond to ASANA_PROJECT_COLUMNS
-    public static final int COL_PROJECT_ID = 1;
-    public static final int COL_PROJECT_NAME = 2;
-    public static final int COL_PROJECT_COLOR = 3;
-
-    // The indices that correspond to ASANA_TASK_COLUMNS
-    public static final int COL_TASK_ID = 1;
-    public static final int COL_TASK_NAME = 2;
-    public static final int COL_TASK_NOTES = 3;
-    public static final int COL_TASK_COMPLETED = 4;
-    public static final int COL_TASK_COMPLETED_AT = 5;
-    public static final int COL_TASK_CREATED = 6;
-    public static final int COL_TASK_CREATED_AT = 7;
-    public static final int COL_TASK_PROJECT_ID = 8;
-    public static final int COL_TASK_WORKSPACE_ID = 9;
-    public static final int COL_TASK_ASSIGNEE_ID = 10;
-    public static final int COL_TASK_ASSIGNEE_STATUS = 11;
-    public static final int COL_TASK_DUE_ON = 12;
-    public static final int COL_TASK_MODIFIED_AT = 13;
-    public static final int COL_TASK_PARENT_ID = 14;
-
-
-    private static int mLastFirstVisibleItem;
-    private static boolean mIsScrollingUp;
 
     public TaskListFragment() {
     }
@@ -125,11 +55,6 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
          * TaskDetailFragment for when an item has been selected.
          */
         public void onItemSelected(String taskId);
-
-        /**
-         * Propagate project values
-         */
-        public void bindValues(CursorAdapter cursorAdapter, Cursor cursor);
     }
 
     /**
@@ -174,7 +99,8 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         String greetingTemplate = "Good %s, %s";
 
         TextView greetingTextView = (TextView) rootView.findViewById(R.id.greeting);
-        greetingTextView.setText(String.format(greetingTemplate, Utility.getTimeOfTheDay(), "Gennady"));
+        // TODO propagate user first name from drawer fragment
+        greetingTextView.setText(String.format(greetingTemplate, Utility.getTimeOfTheDay(), MainActivity.CURRENT_USER_NAME));
 
         mTasksForToday = (TextView) rootView.findViewById(R.id.today_tasks);
 
@@ -185,9 +111,9 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
                 Cursor cursor = mTasksAdapter.getCursor();
 
                 if (cursor != null && cursor.moveToPosition(position)) {
-                    Log.v(LOG_TAG, "Task Id: " + cursor.getString(COL_TASK_ID));
+                    Log.v(LOG_TAG, "Task Id: " + cursor.getString(LoadersColumns.COL_TASK_ID));
                     ((Callback) getActivity())
-                            .onItemSelected(cursor.getString(COL_TASK_ID));
+                            .onItemSelected(cursor.getString(LoadersColumns.COL_TASK_ID));
                 }
                 mPosition = position;
             }
@@ -207,9 +133,7 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        getLoaderManager().initLoader(ASANA_WORKSPACES_LOADER, null, this);
         getLoaderManager().initLoader(ASANA_TASK_LOADER, null, this);
-        getLoaderManager().initLoader(ASANA_PROJECTS_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -222,30 +146,11 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
                 cursorLoader = new CursorLoader(
                         getActivity(),
                         TaskEntry.CONTENT_URI,
-                        ASANA_TASK_COLUMNS,
-                        TaskEntry.COLUMN_TASK_WORKSPACE_ID + " = ?",
-                        new String[]{mCurrentWorkspace},
+                        LoadersColumns.ASANA_TASK_COLUMNS,
+                        null, //TaskEntry.COLUMN_TASK_WORKSPACE_ID + " = ?",
+                        null, //new String[]{mCurrentWorkspace},
                         null);
                 break;
-            case ASANA_PROJECTS_LOADER:
-                cursorLoader = new CursorLoader(
-                        getActivity(),
-                        ProjectEntry.CONTENT_URI,
-                        ASANA_PROJECTS_COLUMNS,
-                        ProjectEntry.COLUMN_PROJECT_WORKSPACE_ID + " = ?",
-                        new String[]{mCurrentWorkspace},
-                        null);
-                break;
-            case ASANA_WORKSPACES_LOADER:
-                cursorLoader = new CursorLoader(
-                        getActivity(),
-                        WorkspaceEntry.CONTENT_URI,
-                        ASANA_WORKSPACES_COLUMNS,
-                        null,
-                        null,
-                        null);
-                break;
-            case ASANA_USER_LOADER:
             default:
                 cursorLoader = null;
         }
@@ -268,29 +173,17 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     @Override
     public void onResume() {
         super.onResume();
-        getLoaderManager().restartLoader(ASANA_WORKSPACES_LOADER, null, this);
         getLoaderManager().restartLoader(ASANA_TASK_LOADER, null, this);
-        getLoaderManager().restartLoader(ASANA_PROJECTS_LOADER, null, this);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor data) {
         switch (cursorLoader.getId()) {
-            case ASANA_PROJECTS_LOADER:
-                // Propagate values to project loader
-                mProjectsAdapter.swapCursor(data);
-                ((Callback) getActivity()).bindValues(mProjectsAdapter, data);
-                break;
             case ASANA_TASK_LOADER:
                 mTasksAdapter.swapCursor(data);
                 int tasksForToday = data.getCount();
                 mTasksForToday.setText(String.format("You have %s %s for today", tasksForToday,
                         tasksForToday == 1 ? "task" : "tasks"));
-                break;
-            case ASANA_WORKSPACES_LOADER:
-                if (data.moveToFirst()) {
-                    mCurrentWorkspace = data.getString(COL_WORKSPACE_ID);
-                }
                 break;
             default:
                 Log.d(LOG_TAG, "Loader: " + cursorLoader.getId());

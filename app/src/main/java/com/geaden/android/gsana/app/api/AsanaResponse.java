@@ -19,6 +19,9 @@ public class AsanaResponse {
     }
 
     public AsanaResponse(Object data) throws MalformedResponseException {
+        if (data == null) {
+            return;
+        }
         if (data instanceof String) {
             try {
                 data = new JSONObject((String) data);

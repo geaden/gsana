@@ -1,7 +1,11 @@
 package com.geaden.android.gsana.app.api;
 
+import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+
+import com.geaden.android.gsana.app.Utility;
+import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +24,9 @@ import java.net.URL;
 public class AsanaApiBridge {
     private static final String LOG_TAG = AsanaApiBridge.class.getSimpleName();
 
+    private Context mContext;
+    private AsanaOAuthClient mAsanaOAuthClient;
+
     // HTTP Methods
     public static final String GET = "GET";
     public static final String POST = "POST";
@@ -31,6 +38,25 @@ public class AsanaApiBridge {
     public static final int UNAUTHORIZED = 401;
     public static final int ACCESS_DENIED = 403;
     public static final int METHOD_NOT_ALLOWED = 405;
+
+    private static AsanaApiBridge instance = null;
+
+    private AsanaApiBridge(Context context) {
+        mContext = context;
+        mAsanaOAuthClient = AsanaOAuthClient.getInstance();
+    };
+
+    /**
+     * Singleton of Asana API Bridge
+     * @param context application context
+     * @return {@link com.geaden.android.gsana.app.api.AsanaApiBridge} instance
+     */
+    public static AsanaApiBridge getInstance(Context context) {
+        if (instance == null) {
+            instance = new AsanaApiBridge(context);
+        }
+        return instance;
+    }
 
     /**
      * Gets base API url
@@ -51,8 +77,9 @@ public class AsanaApiBridge {
      * @param httpMethod HTTP request method to use (e.g. "POST")
      * @param path Path to call.
      */
-    public static void request(String httpMethod, String path, String accessToken,
-                        String params, AsanaCallback<AsanaResponse> callback) {
+    public void request(String httpMethod, String path, String params,
+                        AsanaCallback<AsanaResponse> callback) {
+        String accessToken = Utility.getAccessToken(mContext);
         httpMethod = httpMethod.toUpperCase();
         Log.d(LOG_TAG, String.format("Client API request %s %s", httpMethod, path));
 
@@ -71,15 +98,12 @@ public class AsanaApiBridge {
             if (params != null && (httpMethod.equals(POST) || httpMethod.equals(PUT))) {
                 urlConnection.setRequestProperty("Content-Type",
                         "application/json");
-
                 urlConnection.setRequestProperty("Content-Length", "" +
                         Integer.toString(params.getBytes().length));
                 urlConnection.setRequestProperty("Content-Language", "en-US");
-
                 urlConnection.setUseCaches (false);
                 urlConnection.setDoInput(true);
                 urlConnection.setDoOutput(true);
-
                 //Send request
                 DataOutputStream wr = new DataOutputStream (
                         urlConnection.getOutputStream ());
@@ -117,7 +141,15 @@ public class AsanaApiBridge {
                 Log.v(LOG_TAG, "Response: " + responseData);
             } else if (serverCode == UNAUTHORIZED) {
                 Log.d(LOG_TAG, "serverCode 401");
-                callback.onError(new Exception("serverCode 401"));
+                Log.d(LOG_TAG, "Refreshing token and retrying...");
+                String refreshToken = Utility.getRefreshToken(mContext);
+                AsanaOAuthClient.AsanaTokenResponse tokenResponse = mAsanaOAuthClient.refreshToken(refreshToken);
+                // Update values in shared preferences
+                Utility.putSettingsStringValue(mContext, Utility.ACCESS_TOKEN_KEY, tokenResponse.getAccessToken());
+                Utility.putSettingsStringValue(mContext, Utility.REFRESH_TOKEN_KEY, tokenResponse.getRefreshToken());
+                Utility.putSettingsStringValue(mContext, Utility.CURRENT_USER_KEY, String.valueOf(tokenResponse.getUser().getId()));
+                request(httpMethod, path, params, callback);
+                return;
             } else {
                 Log.e(LOG_TAG, "Server returned the following error code: " + serverCode, null);
                 callback.onError(new Exception("Server returned the following error code: " + serverCode));

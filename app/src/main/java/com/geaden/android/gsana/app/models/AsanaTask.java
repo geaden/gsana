@@ -50,12 +50,10 @@ public class AsanaTask extends BaseModel {
         modifiedAt = getStringValue(taskData, ASANA_TASK_MODIFIED_AT);
         createdAt = getStringValue(taskData, ASANA_TASK_CREATED_AT);
         dueOn = getStringValue(taskData, ASANA_TASK_DUE_ON);
-        if (taskData.has(ASANA_TASK_WORKSPACE)) {
-            workspace = new AsanaWorkspace(getJSONObject(taskData, ASANA_TASK_WORKSPACE));
-        }
+        workspace = new AsanaWorkspace(getJSONObject(taskData, ASANA_TASK_WORKSPACE));
         projects = new ArrayList<AsanaProject>();
-        if (taskData.has(ASANA_TASK_PROJECTS)) {
-            JSONArray taskProjects = getJSONArray(taskData, ASANA_TASK_PROJECTS);
+        JSONArray taskProjects = getJSONArray(taskData, ASANA_TASK_PROJECTS);
+        if (taskProjects != null) {
             for (int i = 0; i < taskProjects.length(); i++) {
                 try {
                     JSONObject projectData = taskProjects.getJSONObject(0);

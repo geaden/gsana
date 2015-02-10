@@ -2,4 +2,8 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    <!-- Drawer data -->
+    <dimen name="drawer_workspaces_title_size">18dp</dimen>
+    <dimen name="drawer_projects_title_size">18dp</dimen>
+    <dimen name="drawer_workspaces_list_item_height">24dp</dimen>
 </resources>

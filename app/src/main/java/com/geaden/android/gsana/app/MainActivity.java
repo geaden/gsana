@@ -1,13 +1,17 @@
 package com.geaden.android.gsana.app;
 
+import android.app.LoaderManager;
 import android.content.Context;
+import android.support.v4.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -26,8 +30,10 @@ import android.widget.Toast;
 
 import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.api.AsanaCallback;
+import com.geaden.android.gsana.app.data.GsanaContract;
 import com.geaden.android.gsana.app.models.AsanaUser;
 import com.geaden.android.gsana.app.models.AsanaWorkspace;
+import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
 
 
 import java.io.IOException;
@@ -50,18 +56,15 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
 
     private ActionBarDrawerToggle mDrawerToggle;
 
-    private Toolbar mToolbar;
     private DrawerLayout mDrawerLayout;
-    private ListView mDrawerList;
-    private TextView mDrawerUserInfo;
-    private ImageView mDrawerUserPic;
-    private AsanaWorkspace mSelectedWorkspace;
 
-    private String[] mDrawerTitles;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
 
     private String mAccessToken;
+
+    // Current user first name to display
+    public static String CURRENT_USER_NAME = "";
 
     private ArrayAdapter<String> mWorkspaceAdapter;
 
@@ -81,9 +84,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             startActivity(intent);
             return;
         } else {
-            mAsanaApi = AsanaApi2.getInstance(this, mAccessToken);
-            // Fetch user info
-            mDrawerTitles = new String[]{"Gennady Denisov", "Projects", "Workspace"};
+            mAsanaApi = AsanaApi2.getInstance(this);
             mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
             mDrawerToggle = new ActionBarDrawerToggle(
                     this,                  /* host Activity */
@@ -113,20 +114,10 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
 
-            mDrawerList = (ListView) findViewById(R.id.left_drawer_workspaces_list);
-
-            mDrawerUserInfo = (TextView) findViewById(R.id.left_drawer_user_name);
-            mDrawerUserPic = (ImageView) findViewById(R.id.left_drawer_user_pic);
-
-            FetchUserInfoTask userInfoTask = new FetchUserInfoTask();
-            userInfoTask.execute();
-
-            // Set the list's click listener
-            mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-
             if (savedInstanceState == null) {
                 TaskListFragment taskListFragment = TaskListFragment.newInstance(mAccessToken);
                 getSupportFragmentManager().beginTransaction()
+                        .add(R.id.drawer_container, MainDrawerFragment.newInstance())
                         .add(R.id.container, taskListFragment)
                         .commit();
             }
@@ -176,25 +167,12 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             Utility.invalidateAccessToken(this);
             startActivity(getIntent());
             return true;
+        } else if (id == R.id.action_sync) {
+            // Sync immediately
+            GsanaSyncAdapter.syncImmediately(this);
+            return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private class DrawerItemClickListener implements ListView.OnItemClickListener {
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-            selectItem(position);
-        }
-    }
-
-    /** Swaps fragments in the main content view */
-    private void selectItem(int position) {
-        // Highlight the selected item, update the title, and close the drawer
-        mDrawerList.setItemChecked(position, true);
-        // TODO: Query for projects
-        Toast.makeText(getApplicationContext(), "Selected " + position, Toast.LENGTH_SHORT).show();
-//        setTitle(mDrawerTitles[position]);
-//        mDrawerLayout.closeDrawer(mDrawerList);
     }
 
     @Override
@@ -203,110 +181,11 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
         this.getSupportActionBar().setTitle(mTitle);
     }
 
-    private class FetchUserPicTask extends AsyncTask<String, Void, Bitmap> {
-        @Override
-        protected Bitmap doInBackground(String... params) {
-            Bitmap userPic = null;
-            try {
-                URL url = new URL(params[0]);
-                HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-                connection.setDoInput(true);
-                connection.connect();
-                InputStream input = connection.getInputStream();
-                userPic = BitmapFactory.decodeStream(input);
-            } catch (IOException e) {
-                Log.e(LOG_TAG, e.getMessage());
-            }
-            return userPic;
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            mDrawerUserPic.setImageBitmap(bitmap);
-        }
-    }
-
-    /**
-     * Fetches user info in background
-     */
-    public class FetchUserInfoTask extends AsyncTask<Void, Void, AsanaUser> {
-        private String LOG_TAG = getClass().getSimpleName();
-        private String refreshToken = null;
-
-        @Override
-        protected AsanaUser doInBackground(Void... voids) {
-            final AsanaUser asanaUser = new AsanaUser();
-            mAsanaApi.me(new AsanaCallback<AsanaUser>() {
-                @Override
-                public void onResult(AsanaUser me) {
-                    Log.i(LOG_TAG, "User info: " + me);
-                    asanaUser.setId(me.getId());
-                    asanaUser.setName(me.getName());
-                    asanaUser.setPhoto(me.getPhoto());
-                    asanaUser.setWorkspaces(me.getWorkspaces());
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    Log.d(LOG_TAG, "Error retrieving user info " + e.getMessage());
-                    Utility.invalidateAccessToken(getApplicationContext());
-                    // Obtain a new token by calling new activity
-                    refreshToken = Utility.getRefreshToken(getApplicationContext());
-                }
-            });
-            return asanaUser;
-        }
-
-        @Override
-        protected void onPostExecute(AsanaUser userInfo) {
-            if (userInfo == null && refreshToken != null) {
-                // Move to login activity
-                Intent loginIntent = new Intent(getApplicationContext(), LoginActivity.class);
-                loginIntent.putExtra(Utility.REFRESH_TOKEN_KEY, refreshToken);
-                getApplicationContext().startActivity(loginIntent);
-                finish();
-                return;
-            }
-
-            mDrawerUserInfo.setText(userInfo.getName());
-
-            /** Fetch user pic **/
-            FetchUserPicTask fetchUserPicTask = new FetchUserPicTask();
-            fetchUserPicTask.execute(userInfo.getPhoto().getPhotoUrl());
-
-            List<AsanaWorkspace> workspaces = userInfo.getWorkspaces();
-            mDrawerTitles = new String[workspaces.size()];
-            for (int i = 0; i < workspaces.size(); i++) {
-                mDrawerTitles[i] = workspaces.get(i).getName();
-            }
-            // Set the adapter for the list view
-            mWorkspaceAdapter = new ArrayAdapter<String>(getApplicationContext(),
-                    R.layout.drawer_list_item, mDrawerTitles);
-            mDrawerList.setAdapter(mWorkspaceAdapter);
-            // Select first workspace by default
-            mDrawerList.setSelection(0);
-            mSelectedWorkspace = workspaces.get(0);
-        }
-    }
-
     @Override
     public void onItemSelected(String taskId) {
         // TODO: implement two panes mode
         Intent intent = new Intent(this, TaskDetailActivity.class)
                 .putExtra(TaskDetailActivity.TASK_KEY, taskId);
         startActivity(intent);
-    }
-
-    @Override
-    public void bindValues(CursorAdapter cursorAdapter, Cursor cursor) {
-        // Bind data to drawer layout
-        if (cursor.getCount() > 0) {
-            if (mDrawerLayout == null) {
-                mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-            }
-            cursorAdapter.bindView(mDrawerLayout, getApplicationContext(), cursor);
-        } else {
-            Log.d(LOG_TAG, "No data returned");
-        }
     }
 }

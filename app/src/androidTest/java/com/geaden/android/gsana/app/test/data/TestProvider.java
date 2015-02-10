@@ -3,6 +3,7 @@ package com.geaden.android.gsana.app.test.data;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.test.AndroidTestCase;
 import android.util.Log;
@@ -11,6 +12,12 @@ import com.geaden.android.gsana.app.data.GsanaContract.WorkspaceEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.ProjectEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.UserEntry;
+import com.geaden.android.gsana.app.data.GsanaDbHelper;
+
+import junit.framework.Assert;
+
+import java.util.Arrays;
+import java.util.Vector;
 
 
 public class TestProvider extends AndroidTestCase {
@@ -173,6 +180,11 @@ public class TestProvider extends AndroidTestCase {
                 null,
                 null);
 
+        assertTrue(taskCursor.moveToFirst());
+        int taskColorIdx = taskCursor.getColumnIndex(ProjectEntry.COLUMN_PROJECT_COLOR);
+        String taskColor = taskCursor.getString(taskColorIdx);
+        assertEquals("dark-red", taskColor);
+
         TestDb.validateCursor(taskCursor, testTaskValues);
     }
 
@@ -251,7 +263,7 @@ public class TestProvider extends AndroidTestCase {
         return testValues;
     }
 
-    // Inserts both the location and weather data for the Kalamazoo data set.
+    // Inserts both the project and workspace data for the test data set.
     public void insertGsanaWorkspaceData() {
         ContentValues gsanaWorksapceData = createGsanaWorkspace();
         Uri workspaceInsertUri = mContext.getContentResolver()
@@ -286,6 +298,29 @@ public class TestProvider extends AndroidTestCase {
         );
 
         TestDb.validateCursor(gsanaCursor, gsanaWorkspaceUpdate);
+    }
+
+    public void testUpdateInsteadOfInsert() {
+        final long TEST_TASK_ID_2 = 1003;
+        final long TEST_TASK_ID_3 = 1004;
+        ContentValues testTaskValues1 = TestDb.createTaskValues(TestDb.TEST_WORKSPACE_ID, TestDb.TEST_PROJECT_ID, TestDb.TEST_USER_ID);
+        ContentValues testTaskValues2 = TestDb.createTaskValues(TestDb.TEST_WORKSPACE_ID, TestDb.TEST_PROJECT_ID, TestDb.TEST_USER_ID);
+        testTaskValues2.put(TaskEntry.COLUMN_TASK_ID, TEST_TASK_ID_2);
+        ContentValues testTaskValues3 = TestDb.createTaskValues(TestDb.TEST_WORKSPACE_ID, TestDb.TEST_PROJECT_ID, TestDb.TEST_USER_ID);
+        testTaskValues3.put(TaskEntry.COLUMN_TASK_ID, TEST_TASK_ID_3);
+
+        Vector<ContentValues> cvVector = new Vector<ContentValues>();
+        cvVector.add(testTaskValues1);
+        cvVector.add(testTaskValues2);
+        cvVector.add(testTaskValues3);
+
+        ContentValues[] cvArray = new ContentValues[cvVector.size()];
+        cvVector.toArray(cvArray);
+        int rowsInserted = mContext.getContentResolver().bulkInsert(TaskEntry.CONTENT_URI, cvArray);
+        assertEquals(cvArray.length, rowsInserted);
+        // Perform insert one more time
+        rowsInserted = mContext.getContentResolver().bulkInsert(TaskEntry.CONTENT_URI, cvArray);
+        assertEquals(0, rowsInserted);
     }
 
     // Make sure we can still delete after adding/updating stuff

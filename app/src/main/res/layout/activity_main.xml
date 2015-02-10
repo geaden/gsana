@@ -15,61 +15,64 @@
             android:layout_height="match_parent"
             tools:context=".MainActivity"
             tools:ignore="MergeRootFrame" />
-        <!--<FrameLayout-->
-            <!--android:layout_width="fill_parent"-->
-            <!--android:layout_height="fill_parent"-->
-            <!--android:id="@+id/floating_action_button" />-->
     </FrameLayout>
 
     <!-- The navigation drawer -->
-    <LinearLayout
-        android:id="@+id/drawer_liner_layout"
+    <FrameLayout
+        android:id="@+id/drawer_container"
         android:layout_width="280dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="#fff"
-        android:layout_gravity="start">
+        android:layout_gravity="start" />
+    <!--<LinearLayout-->
+        <!--android:id="@+id/drawer_liner_layout"-->
+        <!--android:layout_width="280dp"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:orientation="vertical"-->
+        <!--android:background="#fff"-->
+        <!--android:layout_gravity="start">-->
 
-        <!-- User info -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal">
-            <!-- User pic -->
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_launcher"
-                android:id="@+id/left_drawer_user_pic"/>
+        <!--&lt;!&ndash; User info &ndash;&gt;-->
+        <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_marginLeft="16dp"-->
+            <!--android:layout_marginTop="16dp"-->
+            <!--android:orientation="horizontal">-->
+            <!--&lt;!&ndash; User pic &ndash;&gt;-->
+            <!--<ImageView-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:src="@drawable/ic_launcher"-->
+                <!--android:id="@+id/left_drawer_user_pic"/>-->
 
-            <!-- User name -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/left_drawer_user_name"
-                android:text="Foo Bar"
-                android:dividerHeight="0dp"
-                android:layout_marginLeft="4dp"
-                android:textSize="18dp"
-                android:background="#fff"/>
-        </LinearLayout>
+            <!--&lt;!&ndash; User name &ndash;&gt;-->
+            <!--<TextView-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:id="@+id/left_drawer_user_name"-->
+                <!--android:text="Foo Bar"-->
+                <!--android:dividerHeight="0dp"-->
+                <!--android:layout_marginLeft="4dp"-->
+                <!--android:textSize="18dp"-->
+                <!--android:background="#fff"/>-->
+        <!--</LinearLayout>-->
 
-        <!-- List of Workspaces -->
-        <ListView android:id="@+id/left_drawer_workspaces_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:choiceMode="singleChoice"
-            android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:divider="@android:color/transparent" />
+        <!--&lt;!&ndash; List of Workspaces &ndash;&gt;-->
+        <!--<ListView android:id="@+id/left_drawer_workspaces_list"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:choiceMode="singleChoice"-->
+            <!--android:layout_marginLeft="@dimen/activity_horizontal_margin"-->
+            <!--android:divider="@android:color/transparent" />-->
 
-        <!-- List of Projects -->
-        <ListView android:id="@+id/left_drawer_projects_list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:choiceMode="singleChoice"
-            android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:divider="#c0c0c0c0" />
-    </LinearLayout>
+        <!--&lt;!&ndash; List of Projects &ndash;&gt;-->
+        <!--<ListView android:id="@+id/left_drawer_projects_list"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:choiceMode="singleChoice"-->
+            <!--android:layout_marginLeft="@dimen/activity_horizontal_margin"-->
+            <!--android:divider="#c0c0c0c0" />-->
+    <!--</LinearLayout>-->
 </android.support.v4.widget.DrawerLayout>

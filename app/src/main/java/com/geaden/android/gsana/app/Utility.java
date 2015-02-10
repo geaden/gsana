@@ -12,6 +12,8 @@ import java.util.Calendar;
 public class Utility {
     public static final String ACCESS_TOKEN_KEY = "access_token";
     public static final String REFRESH_TOKEN_KEY = "refresh_token";
+    public static final String DEFAULT_WORKSPACE_KEY = "workspace_id";
+    public static final String CURRENT_USER_KEY = "user_id";
 
     public static String getSettingsStringValue(Context context, String key) {
         String value = context.getSharedPreferences(Constants.SHARED_PREF_KEY, Context.MODE_PRIVATE)

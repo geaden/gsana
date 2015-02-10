@@ -135,7 +135,7 @@ public class FetchAsanaTask extends AsyncTask<String, Void, Void> {
         String accessToken = params[0];
 
         // Initialize Asana api
-        AsanaApi2 asanaApi = AsanaApi2.getInstance(mContext, accessToken);
+        AsanaApi2 asanaApi = AsanaApi2.getInstance(mContext);
 
         asanaApi.tasks(mAsanaWorkspace, new AsanaCallback<List<AsanaTask>>() {
             @Override

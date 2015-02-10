@@ -1,6 +1,7 @@
 package com.geaden.android.gsana.app.test.data;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
@@ -15,6 +16,7 @@ import com.geaden.android.gsana.app.data.GsanaDbHelper;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 public class TestDb extends AndroidTestCase {
 

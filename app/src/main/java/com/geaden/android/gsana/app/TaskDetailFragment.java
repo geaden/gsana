@@ -187,7 +187,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
-
+        return;
     }
 
     @Override

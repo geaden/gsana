@@ -21,10 +21,12 @@ public class GsanaTasksAdapter extends CursorAdapter {
     public static class ViewHolder {
         public final TextView taskNameView;
         public final TextView taskDueOnView;
+        public final View taskProjectColor;
 
         public ViewHolder(View view) {
             taskNameView = (TextView) view.findViewById(R.id.list_item_asana_task_name);
             taskDueOnView = (TextView) view.findViewById(R.id.list_item_asana_task_due_on);
+            taskProjectColor = view.findViewById(R.id.list_item_asana_task_project_color);
         }
 
     }
@@ -48,12 +50,17 @@ public class GsanaTasksAdapter extends CursorAdapter {
         ViewHolder viewHolder = (ViewHolder) view.getTag();
 
         // Read task name from cursor
-        String taskName = cursor.getString(TaskListFragment.COL_TASK_NAME);
+        String taskName = cursor.getString(LoadersColumns.COL_TASK_NAME);
         // Find TextView and set task name on it.
         viewHolder.taskNameView.setText(taskName);
 
         // Task due on
-        String taskDueOn = cursor.getString(TaskListFragment.COL_TASK_DUE_ON);
+        String taskDueOn = cursor.getString(LoadersColumns.COL_TASK_DUE_ON);
         viewHolder.taskDueOnView.setText(taskDueOn);
+
+        // Task project color
+        String projectColor = cursor.getString(LoadersColumns.COL_TASK_PROJECT_COLOR);
+        viewHolder.taskProjectColor.setBackgroundColor(GsanaProjectsAdapter.getColor(context, projectColor));
+
     }
 }

@@ -35,7 +35,7 @@ public class GsanaContract {
                 "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_WORKSPACE;
 
         // Table name
-        public static final String TABLE_NAME = "workspace";
+        public static final String TABLE_NAME = "workspaces";
 
         // Workspace id column name
         public static final String COLUMN_WORKSPACE_ID = "workspace_id";
@@ -63,7 +63,7 @@ public class GsanaContract {
                 "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_PROJECT;
 
         // Table name
-        public static final String TABLE_NAME = "project";
+        public static final String TABLE_NAME = "projects";
 
         // Project id column name
         public static final String COLUMN_PROJECT_ID = "project_id";
@@ -109,7 +109,7 @@ public class GsanaContract {
                 "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_TASK;
 
         // Table name
-        public static final String TABLE_NAME = "task";
+        public static final String TABLE_NAME = "tasks";
 
         // Task created at column name
         public static final String COLUMN_TASK_CREATED_AT = "task_created_at";
@@ -167,10 +167,10 @@ public class GsanaContract {
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + PATH_USER;
 
         public static final String CONTENT_ITEM_TYPE =
-                "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" +PATH_USER;
+                "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_USER;
 
         // Table name
-        public static final String TABLE_NAME = "user";
+        public static final String TABLE_NAME = "users";
 
         // User id column name
         public static final String COLUMN_USER_ID = "user_id";
@@ -183,6 +183,9 @@ public class GsanaContract {
 
         // 60x60 photo url of user
         public static final String COLUMN_USER_PHOTO_60 = "user_photo_60";
+
+        // user photo itself
+        public static final String COLUMN_USER_PHOTO = "user_photo";
 
         public static Uri buildUserUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);

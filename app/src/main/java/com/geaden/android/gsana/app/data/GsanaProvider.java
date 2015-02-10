@@ -5,6 +5,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.CursorJoiner;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
@@ -162,14 +163,32 @@ public class GsanaProvider extends ContentProvider {
             // "task"
             case TASK:
             {
-                retCursor = mOpenHelper.getReadableDatabase().query(
-                        GsanaContract.TaskEntry.TABLE_NAME,
-                        projection,
-                        selection,
-                        selectionArgs,
-                        null,
-                        null,
-                        sortOrder);
+                StringBuilder sb = new StringBuilder();
+                String projectionString = "*";
+                if (projection != null) {
+                    for (String projectionColumn : projection) {
+                        sb.append(projectionColumn);
+                        sb.append(", ");
+                    }
+                    projectionString = sb.toString();
+                    Log.d(LOG_TAG, projectionString);
+                    projectionString = projectionString.substring(0, projectionString.length() - 2);
+                }
+                Log.d(LOG_TAG, "Projection string " + projectionString);
+                retCursor = mOpenHelper.getReadableDatabase().rawQuery(
+                        "SELECT " + projectionString + " FROM " + GsanaContract.TaskEntry.TABLE_NAME +
+                        " LEFT JOIN " + GsanaContract.ProjectEntry.TABLE_NAME +
+                        " ON " + GsanaContract.TaskEntry.COLUMN_TASK_PROJECT_ID + " = " + GsanaContract.ProjectEntry.COLUMN_PROJECT_ID,
+                        null
+                );
+//                retCursor = mOpenHelper.getReadableDatabase().query(
+//                        GsanaContract.TaskEntry.TABLE_NAME,
+//                        projection,
+//                        selection,
+//                        selectionArgs,
+//                        null,
+//                        null,
+//                        sortOrder);
                 break;
             }
             // "task/*"
@@ -344,9 +363,9 @@ public class GsanaProvider extends ContentProvider {
                         selectionArgs);
                 break;
             case USER:
-            rowsUpdated = db.update(GsanaContract.TaskEntry.TABLE_NAME, values, selection,
-                    selectionArgs);
-            break;
+                rowsUpdated = db.update(GsanaContract.UserEntry.TABLE_NAME, values, selection,
+                        selectionArgs);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -361,14 +380,29 @@ public class GsanaProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int returnCount = 0;
+        Cursor cursor;
         switch (match) {
             case WORKSPACE:
                 db.beginTransaction();
                 try {
                     for (ContentValues value : values) {
-                        long _id = db.insert(GsanaContract.WorkspaceEntry.TABLE_NAME, null, value);
-                        if (_id != -1) {
-                            returnCount++;
+                        String whereClause = GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_ID +
+                                " = " + value.getAsString(GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_ID);
+                        cursor = db.query(GsanaContract.WorkspaceEntry.TABLE_NAME,
+                                null,
+                                whereClause,
+                                null,
+                                null,
+                                null,
+                                null);
+                        if (cursor.moveToFirst()) {
+                            // Perform workspace update
+                            db.update(GsanaContract.WorkspaceEntry.TABLE_NAME, value, whereClause, null);
+                        } else {
+                            long _id = db.insert(GsanaContract.WorkspaceEntry.TABLE_NAME, null, value);
+                            if (_id != -1) {
+                                returnCount++;
+                            }
                         }
                     }
                     db.setTransactionSuccessful();
@@ -382,9 +416,23 @@ public class GsanaProvider extends ContentProvider {
                 returnCount = 0;
                 try {
                     for (ContentValues value : values) {
-                        long _id = db.insert(GsanaContract.ProjectEntry.TABLE_NAME, null, value);
-                        if (_id != -1) {
-                            returnCount++;
+                        String whereClause = GsanaContract.ProjectEntry.COLUMN_PROJECT_ID +
+                                " = " + value.getAsString(GsanaContract.ProjectEntry.COLUMN_PROJECT_ID);
+                        cursor = db.query(GsanaContract.ProjectEntry.TABLE_NAME,
+                                null,
+                                whereClause,
+                                null,
+                                null,
+                                null,
+                                null);
+                        if (cursor.moveToFirst()) {
+                            // Perform project update
+                            db.update(GsanaContract.ProjectEntry.TABLE_NAME, value, whereClause, null);
+                        } else {
+                            long _id = db.insert(GsanaContract.ProjectEntry.TABLE_NAME, null, value);
+                            if (_id != -1) {
+                                returnCount++;
+                            }
                         }
                     }
                     db.setTransactionSuccessful();
@@ -398,9 +446,23 @@ public class GsanaProvider extends ContentProvider {
                 returnCount = 0;
                 try {
                     for (ContentValues value : values) {
-                        long _id = db.insert(GsanaContract.TaskEntry.TABLE_NAME, null, value);
-                        if (_id != -1) {
-                            returnCount++;
+                        String whereClause = GsanaContract.TaskEntry.COLUMN_TASK_ID +
+                                " = " + value.getAsString(GsanaContract.TaskEntry.COLUMN_TASK_ID);
+                        cursor = db.query(GsanaContract.TaskEntry.TABLE_NAME,
+                                null,
+                                whereClause,
+                                null,
+                                null,
+                                null,
+                                null);
+                        if (cursor.moveToFirst()) {
+                            // Perform task update
+                            db.update(GsanaContract.TaskEntry.TABLE_NAME, value, whereClause, null);
+                        } else {
+                            long _id = db.insert(GsanaContract.TaskEntry.TABLE_NAME, null, value);
+                            if (_id != -1) {
+                                returnCount++;
+                            }
                         }
                     }
                     db.setTransactionSuccessful();
@@ -414,9 +476,23 @@ public class GsanaProvider extends ContentProvider {
                 returnCount = 0;
                 try {
                     for (ContentValues value : values) {
-                        long _id = db.insert(GsanaContract.UserEntry.TABLE_NAME, null, value);
-                        if (_id != -1) {
-                            returnCount++;
+                        String whereClause = GsanaContract.UserEntry.COLUMN_USER_ID +
+                                " = " + value.get(GsanaContract.UserEntry.COLUMN_USER_ID);
+                        cursor = db.query(GsanaContract.UserEntry.TABLE_NAME,
+                                null,
+                                whereClause,
+                                null,
+                                null,
+                                null,
+                                null);
+                        if (cursor.moveToFirst()) {
+                            // Perform user update
+                            db.update(GsanaContract.UserEntry.TABLE_NAME, value, whereClause, null);
+                        } else {
+                            long _id = db.insert(GsanaContract.UserEntry.TABLE_NAME, null, value);
+                            if (_id != -1) {
+                                returnCount++;
+                            }
                         }
                     }
                     db.setTransactionSuccessful();

@@ -10,7 +10,7 @@
     <View
         android:layout_width="16dp"
         android:layout_height="match_parent"
-        android:background="@color/grey"
+        android:background="@color/gray"
         android:id="@+id/list_item_asana_project_color"
         android:layout_marginRight="16dp"/>
 

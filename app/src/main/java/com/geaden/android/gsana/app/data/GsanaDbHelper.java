@@ -3,6 +3,7 @@ package com.geaden.android.gsana.app.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.geaden.android.gsana.app.data.GsanaContract.WorkspaceEntry;
 import com.geaden.android.gsana.app.data.GsanaContract.ProjectEntry;
@@ -17,7 +18,7 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
     private static GsanaDbHelper sInstance;
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 11;
 
     public static final String DATABASE_NAME = "gsana.db";
 
@@ -98,7 +99,8 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
                 UserEntry.COLUMN_USER_ID + " INTEGER UNIQUE NOT NULL, " +
                 UserEntry.COLUMN_USER_EMAIL + " TEXT NOT NULL, " +
                 UserEntry.COLUMN_USER_NAME + " TEXT NOT NULL, " +
-                UserEntry.COLUMN_USER_PHOTO_60 + " TEXT NOT NULL" +
+                UserEntry.COLUMN_USER_PHOTO_60 + " TEXT NOT NULL, " +
+                UserEntry.COLUMN_USER_PHOTO + " BLOB" +
                 " );";
 
         sqLiteDatabase.execSQL(SQL_CREATE_USER_TABLE);
@@ -113,6 +115,7 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + WorkspaceEntry.TABLE_NAME);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + ProjectEntry.TABLE_NAME);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME);
+        Log.v(this.getClass().getSimpleName(), "Upgrading database...");
         onCreate(sqLiteDatabase);
     }
 }

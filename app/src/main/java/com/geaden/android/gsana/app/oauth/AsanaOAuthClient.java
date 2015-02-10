@@ -2,6 +2,8 @@ package com.geaden.android.gsana.app.oauth;
 
 import android.util.Log;
 
+import com.geaden.android.gsana.app.models.AsanaUser;
+
 import net.smartam.leeloo.client.OAuthClient;
 import net.smartam.leeloo.client.URLConnectionClient;
 import net.smartam.leeloo.client.request.OAuthClientRequest;
@@ -82,12 +84,14 @@ public class AsanaOAuthClient {
             asanaTokenResponse.setRefreshToken(oAuthResponse.getRefreshToken());
             asanaTokenResponse.setExpiresIn(oAuthResponse.getExpiresIn());
             Log.v(LOG_TAG, "User: " + oAuthResponse.getParam("data"));
-            AsanaTokenResponse.AsanaUser user = new AsanaTokenResponse.AsanaUser(oAuthResponse.getParam("data"));
+            AsanaUser user = new AsanaUser(new JSONObject(oAuthResponse.getParam("data")));
             asanaTokenResponse.setUser(user);
         } catch (OAuthSystemException e) {
             Log.e(LOG_TAG, "Get Access Token error", e);
         } catch (OAuthProblemException e) {
             Log.e(LOG_TAG, "Problem with OAuth", e);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error to get user data");
         }
         return asanaTokenResponse;
     }
@@ -131,41 +135,6 @@ public class AsanaOAuthClient {
         private String expiresIn;
         private String refreshToken;
         private AsanaUser user;
-
-        public static class AsanaUser {
-            private final String LOG_TAG = getClass().getSimpleName();
-
-            public static final String ID = "id";
-            public static final String NAME = "name";
-            public static final String EMAIL = "email";
-
-            private String id;
-            private String name;
-            private String email;
-
-            public AsanaUser(String userData) {
-                try {
-                    JSONObject data = new JSONObject(userData);
-                    id = data.getString(ID);
-                    name = data.getString(NAME);
-                    email = data.getString(EMAIL);
-                } catch (JSONException e) {
-                    Log.e(LOG_TAG, "Error get user data", e);
-                }
-            }
-
-            public String getId() {
-                return id;
-            }
-
-            public String getName() {
-                return name;
-            }
-
-            public String getEmail() {
-                return email;
-            }
-        }
 
         public void setAccessToken(String accessToken) {
             this.accessToken = accessToken;
