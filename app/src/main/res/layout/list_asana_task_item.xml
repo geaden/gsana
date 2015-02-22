@@ -4,6 +4,7 @@
     android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants"
     android:minHeight="?android:attr/listPreferredItemHeight"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -15,16 +16,37 @@
         android:layout_marginRight="16dp"/>
 
     <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="wrap_content"
+        android:layout_width="50dp"
         android:layout_height="match_parent"
         android:text="Task Name"
+        android:gravity="center_vertical"
         android:layout_weight="2"
         android:id="@+id/list_item_asana_task_name" />
 
     <TextView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
         android:text="Due On"
         android:id="@+id/list_item_asana_task_due_on" />
+
+    <Chronometer xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/toggl_task_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"/>
+
+    <ToggleButton xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:checked="false"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:textOff=""
+        android:textOn=""
+        android:background="@drawable/btn_toggl_start"
+        android:id="@+id/list_item_asana_task_start_timer" />
 
 </LinearLayout>

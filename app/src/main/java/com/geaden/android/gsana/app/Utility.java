@@ -2,6 +2,7 @@ package com.geaden.android.gsana.app;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.Calendar;
@@ -19,6 +20,17 @@ public class Utility {
         String value = context.getSharedPreferences(Constants.SHARED_PREF_KEY, Context.MODE_PRIVATE)
                 .getString(key, null);
         return value;
+    }
+
+    /**
+     * Gets stored preference
+     * @param context activity context
+     * @param key the key to get preference for
+     * @return preference value
+     */
+    public static String getPreference(Context context, String key) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(key, "");
     }
 
     /**

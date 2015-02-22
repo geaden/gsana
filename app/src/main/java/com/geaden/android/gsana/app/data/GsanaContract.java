@@ -150,6 +150,15 @@ public class GsanaContract {
         // Task due date column name
         public static final String COLUMN_TASK_DUE_ON = "task_due_on";
 
+        // Task Toggle Entry id
+        public static final String COLUMN_TOGGL_ENTRY_ID = "toggl_entry_id";
+
+        // Task Toggl Start
+        public static final String COLUMN_TOGGL_START_DATE = "toggl_start_date";
+
+        // Task Toggl Start
+        public static final String COLUMN_TOGGL_END_DATE = "toggl_end_date";
+
         public static Uri buildTaskUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }

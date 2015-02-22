@@ -175,6 +175,7 @@ public class GsanaProvider extends ContentProvider {
                     projectionString = projectionString.substring(0, projectionString.length() - 2);
                 }
                 Log.d(LOG_TAG, "Projection string " + projectionString);
+                // TODO: User query builder
                 retCursor = mOpenHelper.getReadableDatabase().rawQuery(
                         "SELECT " + projectionString + " FROM " + GsanaContract.TaskEntry.TABLE_NAME +
                         " LEFT JOIN " + GsanaContract.ProjectEntry.TABLE_NAME +
@@ -361,6 +362,10 @@ public class GsanaProvider extends ContentProvider {
             case TASK:
                 rowsUpdated = db.update(GsanaContract.TaskEntry.TABLE_NAME, values, selection,
                         selectionArgs);
+                break;
+            case TASK_ID:
+                rowsUpdated = db.update(GsanaContract.TaskEntry.TABLE_NAME, values, GsanaContract.TaskEntry.COLUMN_TASK_ID + " = ?",
+                        new String[]{String.valueOf(ContentUris.parseId(uri))});
                 break;
             case USER:
                 rowsUpdated = db.update(GsanaContract.UserEntry.TABLE_NAME, values, selection,

@@ -53,6 +53,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
+        <activity
+            android:name="com.geaden.android.gsana.app.SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName="com.geaden.android.gsana.app.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.geaden.android.gsana.app.MainActivity" />
+        </activity>
 
         <provider
             android:name=".data.GsanaProvider"

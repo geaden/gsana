@@ -33,7 +33,10 @@ public class LoadersColumns {
             GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_STATUS,
             GsanaContract.TaskEntry.COLUMN_TASK_DUE_ON,
             GsanaContract.TaskEntry.COLUMN_TASK_MODIFIED_AT,
-            GsanaContract.TaskEntry.COLUMN_TASK_PARENT_ID
+            GsanaContract.TaskEntry.COLUMN_TASK_PARENT_ID,
+            GsanaContract.TaskEntry.COLUMN_TOGGL_ENTRY_ID,
+            GsanaContract.TaskEntry.COLUMN_TOGGL_START_DATE,
+            GsanaContract.TaskEntry.COLUMN_TOGGL_END_DATE
     };
 
     // The indices that correspond to ASANA_TASK_COLUMNS
@@ -42,16 +45,18 @@ public class LoadersColumns {
     public static final int COL_TASK_NOTES = 3;
     public static final int COL_TASK_COMPLETED = 4;
     public static final int COL_TASK_COMPLETED_AT = 5;
-    public static final int COL_TASK_CREATED = 6;
-    public static final int COL_TASK_CREATED_AT = 7;
-    public static final int COL_TASK_PROJECT_ID = 8;
-    public static final int COL_TASK_PROJECT_COLOR = 9;
-    public static final int COL_TASK_WORKSPACE_ID = 10;
-    public static final int COL_TASK_ASSIGNEE_ID = 11;
-    public static final int COL_TASK_ASSIGNEE_STATUS = 12;
-    public static final int COL_TASK_DUE_ON = 13;
-    public static final int COL_TASK_MODIFIED_AT = 14;
-    public static final int COL_TASK_PARENT_ID = 15;
+    public static final int COL_TASK_CREATED_AT = 6;
+    public static final int COL_TASK_PROJECT_ID = 7;
+    public static final int COL_TASK_PROJECT_COLOR = 8;
+    public static final int COL_TASK_WORKSPACE_ID = 9;
+    public static final int COL_TASK_ASSIGNEE_ID = 10;
+    public static final int COL_TASK_ASSIGNEE_STATUS = 11;
+    public static final int COL_TASK_DUE_ON = 12;
+    public static final int COL_TASK_MODIFIED_AT = 13;
+    public static final int COL_TASK_PARENT_ID = 14;
+    public static final int COL_TASK_TOGGL_ENTRY_ID = 15;
+    public static final int COL_TASK_TOGGLE_START_DATE = 16;
+    public static final int COL_TASK_TOGGLE_END_DATE = 16;
 
     // Specify the order of columns for projects
     public static final String[] ASANA_PROJECTS_COLUMNS = {
@@ -82,6 +87,4 @@ public class LoadersColumns {
     public static final int COL_USER_EMAIL = 3;
     public static final int COL_USER_PHOTO_60 = 4;
     public static final int COL_USER_PHOTO = 5;
-
-
 }

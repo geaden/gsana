@@ -161,6 +161,8 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
         // Handle your other action bar items...
         int id = item.getItemId();
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
             return true;
         } else if (id == R.id.action_logout) {
             // Remove access token. If logout chosen.

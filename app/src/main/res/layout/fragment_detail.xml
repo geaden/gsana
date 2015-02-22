@@ -51,6 +51,7 @@
             android:layout_height="500dip"
             android:layout_margin="4dp"
             android:text="Task Description"
+            android:autoLink="web|email"
             android:id="@+id/asana_task_description" />
         <LinearLayout
             android:layout_width="match_parent"

@@ -54,7 +54,7 @@ public class GsanaProjectsAdapter extends CursorAdapter {
         static final String DARK_WARM_GRAY = "dark-warm-gray";
         static final String LIGHT_PINK = "light-pink";
         static final String LIGHT_GREEN = "light-green";
-        static final String LIGHT_BLUE = "ligth-blue";
+        static final String LIGHT_BLUE = "light-blue";
         static final String LIGHT_RED = "light-red";
         static final String LIGHT_TEAL = "light-teal";
         static final String LIGHT_YELLOW = "light-yellow";
@@ -70,6 +70,9 @@ public class GsanaProjectsAdapter extends CursorAdapter {
      */
     public static int getColor(Context context, String colorString) {
         int color;
+        if (colorString == null) {
+            return context.getResources().getColor(R.color.dark_warm_gray);
+        }
         Resources res = context.getResources();
         switch (colorString) {
             case AsanaProjectColor.DARK_BLUE:

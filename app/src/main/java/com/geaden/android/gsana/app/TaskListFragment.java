@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
 
@@ -35,6 +36,8 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     private String mCurrentWorkspace = "";
 
     private TextView mTasksForToday;
+
+    private ToggleButton mStartTimerButton;
 
     private static final String SELECTED_KEY = "selected_position";
 
