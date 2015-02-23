@@ -1,47 +1,22 @@
 package com.geaden.android.gsana.app;
 
-import android.app.LoaderManager;
 import android.content.Context;
-import android.support.v4.content.CursorLoader;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.res.Configuration;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CursorAdapter;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.geaden.android.gsana.app.api.AsanaApi2;
-import com.geaden.android.gsana.app.api.AsanaCallback;
-import com.geaden.android.gsana.app.data.GsanaContract;
-import com.geaden.android.gsana.app.models.AsanaUser;
-import com.geaden.android.gsana.app.models.AsanaWorkspace;
+import com.geaden.android.gsana.app.fragments.MainDrawerFragment;
+import com.geaden.android.gsana.app.fragments.TaskListFragment;
 import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
-
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.List;
-
-import javax.net.ssl.HttpsURLConnection;
 
 
 /**
@@ -121,6 +96,9 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
                         .add(R.id.container, taskListFragment)
                         .commit();
             }
+
+            /** Initialize sync adapter */
+            GsanaSyncAdapter.initializeSyncAdapter(this);
         }
     }
 

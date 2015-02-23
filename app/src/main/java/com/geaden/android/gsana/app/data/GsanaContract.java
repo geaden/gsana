@@ -191,10 +191,19 @@ public class GsanaContract {
         public static final String COLUMN_USER_NAME = "user_name";
 
         // 60x60 photo url of user
-        public static final String COLUMN_USER_PHOTO_60 = "user_photo_60";
+        public static final String COLUMN_USER_PHOTO_URL_60 = "user_photo_url_60";
+
+        // 128x128 photo url of user
+        public static final String COLUMN_USER_PHOTO_URL_128 = "user_photo_url_128";
 
         // user photo itself
         public static final String COLUMN_USER_PHOTO = "user_photo";
+
+        // blob of user photo 60x60
+        public static final String COLUMN_USER_PHOTO_60 = "user_photo_60";
+
+        // blob of user photo 128x128
+        public static final String COLUMN_USER_PHOTO_128 = "user_photo_128";
 
         public static Uri buildUserUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);

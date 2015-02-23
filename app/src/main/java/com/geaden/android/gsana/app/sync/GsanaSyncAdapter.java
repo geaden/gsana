@@ -17,29 +17,21 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.CursorAdapter;
 
-import com.geaden.android.gsana.app.GsanaUserAdapter;
 import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.api.AsanaCallback;
-import com.geaden.android.gsana.app.api.AsanaResponse;
 import com.geaden.android.gsana.app.data.GsanaContract;
 import com.geaden.android.gsana.app.models.AsanaProject;
 import com.geaden.android.gsana.app.models.AsanaTask;
 import com.geaden.android.gsana.app.models.AsanaUser;
 import com.geaden.android.gsana.app.models.AsanaWorkspace;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -189,22 +181,28 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
 
     /**
      * Fetches user picture from url
-     * @param urlString the url to fetch data from
+     * @param userPhoto user photo data (i.e. 60x60 pics url)
      * @return {@link android.graphics.Bitmap} user picture
      */
-    private Bitmap fetchUserPic(String urlString) {
-        Bitmap userPic = null;
+    private Bitmap[] fetchUserPics(AsanaUser.UserPhoto userPhoto) {
+        Bitmap[] userPics = new Bitmap[2];
         try {
-            URL url = new URL(urlString);
+            URL url = new URL(userPhoto.getPhoto60Url());
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
             connection.setDoInput(true);
             connection.connect();
             InputStream input = connection.getInputStream();
-            userPic = BitmapFactory.decodeStream(input);
+            userPics[0] = BitmapFactory.decodeStream(input);
+            url = new URL(userPhoto.getPhoto128Url());
+            connection = (HttpsURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            input = connection.getInputStream();
+            userPics[1] = BitmapFactory.decodeStream(input);
         } catch (IOException e) {
             Log.e(LOG_TAG, e.getMessage());
         }
-        return userPic;
+        return userPics;
     }
 
     /**
@@ -218,13 +216,19 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
         userValues.put(GsanaContract.UserEntry.COLUMN_USER_ID, asanaUser.getId());
         userValues.put(GsanaContract.UserEntry.COLUMN_USER_NAME, asanaUser.getName());
         userValues.put(GsanaContract.UserEntry.COLUMN_USER_EMAIL, asanaUser.getEmail());
-        userValues.put(GsanaContract.UserEntry.COLUMN_USER_PHOTO_60, asanaUser.getPhoto().getPhotoUrl());
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_PHOTO_URL_60, asanaUser.getPhoto().getPhoto60Url());
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_PHOTO_URL_128, asanaUser.getPhoto().getPhoto128Url());
         /** Fetch user picture and insert to database **/
-        Bitmap userPic = fetchUserPic(asanaUser.getPhoto().getPhotoUrl());
+        Bitmap[] userPics = fetchUserPics(asanaUser.getPhoto());
         ByteArrayOutputStream outStr = new ByteArrayOutputStream();
-        userPic.compress(Bitmap.CompressFormat.PNG, 100, outStr);
-        byte[] blob = outStr.toByteArray();
-        userValues.put(GsanaContract.UserEntry.COLUMN_USER_PHOTO, blob);
+        userPics[0].compress(Bitmap.CompressFormat.PNG, 100, outStr);
+        byte[] blob60 = outStr.toByteArray();
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_PHOTO_60, blob60);
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_PHOTO, blob60);
+        outStr = new ByteArrayOutputStream();
+        userPics[1].compress(Bitmap.CompressFormat.PNG, 100, outStr);
+        byte[] blob128 = outStr.toByteArray();
+        userValues.put(GsanaContract.UserEntry.COLUMN_USER_PHOTO_128, blob128);
         cVVector.add(userValues);
         insertOrUpdate(GsanaContract.UserEntry.CONTENT_URI, cVVector);
     }
@@ -263,6 +267,35 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
                 Log.d(LOG_TAG, "Retrieved workspaces");
                 performWorkspacesInsert(workspaces);
                 for (AsanaWorkspace asanaWorkspace : workspaces) {
+                    asanaApi.projects(asanaWorkspace, new AsanaCallback<List<AsanaProject>>() {
+                        @Override
+                        public void onResult(List<AsanaProject> asanaProjects) {
+                            for (final AsanaProject asanaProject : asanaProjects) {
+                                asanaApi.getProjectDetails(asanaProject, new AsanaCallback<AsanaProject>() {
+                                    @Override
+                                    public void onResult(AsanaProject value) {
+                                        asanaProject.setColor(value.getColor());
+                                        asanaProject.setWorkspace(value.getWorkspace());
+                                        asanaProject.setNotes(value.getNotes());
+                                        asanaProject.setArchived(value.getArchived());
+                                        asanaProject.setCreatedAt(value.getCreatedAt());
+                                    }
+
+                                    @Override
+                                    public void onError(Throwable e) {
+                                        Log.d(LOG_TAG, "Error Retrieving project details " + e.getMessage());
+                                    }
+                                });
+                            }
+                            performaProjectsInsert(asanaProjects);
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.d(LOG_TAG, "Error retrieving projects " + e.getMessage());
+                        }
+                    });
+
                     asanaApi.tasks(asanaWorkspace, new AsanaCallback<List<AsanaTask>>() {
                         @Override
                         public void onResult(List<AsanaTask> asanaTasks) {
@@ -290,34 +323,6 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
                         @Override
                         public void onError(Throwable e) {
                             Log.e(LOG_TAG, "Error retrieving tasks " + e.getMessage());
-                        }
-                    });
-                    asanaApi.projects(asanaWorkspace, new AsanaCallback<List<AsanaProject>>() {
-                        @Override
-                        public void onResult(List<AsanaProject> asanaProjects) {
-                            for (final AsanaProject asanaProject : asanaProjects) {
-                                asanaApi.getProjectDetails(asanaProject, new AsanaCallback<AsanaProject>() {
-                                    @Override
-                                    public void onResult(AsanaProject value) {
-                                        asanaProject.setColor(value.getColor());
-                                        asanaProject.setWorkspace(value.getWorkspace());
-                                        asanaProject.setNotes(value.getNotes());
-                                        asanaProject.setArchived(value.getArchived());
-                                        asanaProject.setCreatedAt(value.getCreatedAt());
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable e) {
-                                        Log.d(LOG_TAG, "Error Retrieving project details " + e.getMessage());
-                                    }
-                                });
-                            }
-                            performaProjectsInsert(asanaProjects);
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            Log.d(LOG_TAG, "Error retrieving projects " + e.getMessage());
                         }
                     });
                 }

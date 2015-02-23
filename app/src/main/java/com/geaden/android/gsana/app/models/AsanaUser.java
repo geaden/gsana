@@ -20,6 +20,8 @@ public class AsanaUser extends BaseModel {
     private final String ASANA_USER_PHOTO = "photo";
     private final String ASANA_USER_EMAIL = "email";
     private final String ASANA_USER_PHOTO_URL = "image_60x60";
+    private final String ASANA_USER_PHOTO_60_URL = "image_60x60";
+    private final String ASANA_USER_PHOTO_128_URL = "image_128x128";
 
     // User fields
     private String email;
@@ -52,13 +54,25 @@ public class AsanaUser extends BaseModel {
 
     public class UserPhoto {
         private String photoUrl;
+        private String photo60Url;
+        private String photo128Url;
 
         UserPhoto(JSONObject userPhotoData) {
             photoUrl = getStringValue(userPhotoData, ASANA_USER_PHOTO_URL);
+            photo60Url = getStringValue(userPhotoData, ASANA_USER_PHOTO_60_URL);
+            photo128Url = getStringValue(userPhotoData, ASANA_USER_PHOTO_128_URL);
         }
 
         public String getPhotoUrl() {
             return photoUrl;
+        }
+
+        public String getPhoto60Url() {
+            return photo60Url;
+        }
+
+        public String getPhoto128Url() {
+            return photo128Url;
         }
     }
 

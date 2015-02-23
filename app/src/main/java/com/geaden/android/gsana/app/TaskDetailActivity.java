@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 
+import com.geaden.android.gsana.app.fragments.TaskDetailFragment;
+
 /**
  * Task detail activity.
  */

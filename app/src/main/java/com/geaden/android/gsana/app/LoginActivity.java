@@ -3,6 +3,8 @@ package com.geaden.android.gsana.app;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 
+import com.geaden.android.gsana.app.fragments.LoginFragment;
+
 
 /**
  * Gsana login activity

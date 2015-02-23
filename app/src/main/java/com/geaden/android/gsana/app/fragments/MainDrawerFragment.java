@@ -1,4 +1,4 @@
-package com.geaden.android.gsana.app;
+package com.geaden.android.gsana.app.fragments;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -23,6 +23,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.geaden.android.gsana.app.adapters.GsanaProjectsAdapter;
+import com.geaden.android.gsana.app.LoadersColumns;
+import com.geaden.android.gsana.app.MainActivity;
+import com.geaden.android.gsana.app.R;
+import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.data.GsanaContract;
 
 

@@ -1,4 +1,4 @@
-package com.geaden.android.gsana.app;
+package com.geaden.android.gsana.app.adapters;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -8,20 +8,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Chronometer;
 import android.widget.CursorAdapter;
-import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.ToggleButton;
 
+import com.geaden.android.gsana.app.LoadersColumns;
+import com.geaden.android.gsana.app.R;
+import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.api.toggl.GToggl;
 import com.geaden.android.gsana.app.api.toggl.TimeEntry;
 import com.geaden.android.gsana.app.api.toggl.util.DateUtil;
 import com.geaden.android.gsana.app.data.GsanaContract;
 
 import java.util.Date;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * {@link GsanaTasksAdapter} exposes a list of tasks
@@ -39,15 +37,15 @@ public class GsanaTasksAdapter extends CursorAdapter {
         public final TextView taskNameView;
         public final TextView taskDueOnView;
         public final View taskProjectColor;
-        public final ToggleButton taskStartTimer;
-        private final Chronometer taskTimer;
+//        public final ToggleButton toggleTimer;
+//        private final Chronometer taskTimer;
 
         public ViewHolder(View view) {
             taskNameView = (TextView) view.findViewById(R.id.list_item_asana_task_name);
             taskDueOnView = (TextView) view.findViewById(R.id.list_item_asana_task_due_on);
             taskProjectColor = view.findViewById(R.id.list_item_asana_task_project_color);
-            taskStartTimer = (ToggleButton) view.findViewById(R.id.list_item_asana_task_start_timer);
-            taskTimer = (Chronometer) view.findViewById(R.id.toggl_task_timer);
+//            toggleTimer = (ToggleButton) view.findViewById(R.id.list_item_asana_task_start_timer);
+//            taskTimer = (Chronometer) view.findViewById(R.id.toggl_task_timer);
         }
 
     }
@@ -68,7 +66,7 @@ public class GsanaTasksAdapter extends CursorAdapter {
         mTogglApiKey = Utility.getPreference(context, context.getResources().getString(R.string.pref_toggl_api_key));
         Log.i(LOG_TAG, "Toggle API Key: " + mTogglApiKey);
         if (mTogglApiKey == null || mTogglApiKey.length() < 32) {
-            viewHolder.taskStartTimer.setVisibility(View.GONE);
+//            viewHolder.toggleTimer.setVisibility(View.GONE);
         } else {
             mTogglEnabled = true;
         }
@@ -88,78 +86,91 @@ public class GsanaTasksAdapter extends CursorAdapter {
 
         // Task due on
         String taskDueOn = cursor.getString(LoadersColumns.COL_TASK_DUE_ON);
-        viewHolder.taskDueOnView.setText(taskDueOn != null ? taskDueOn : "");
+        viewHolder.taskDueOnView.setText(!taskDueOn.equals("null") ? Utility.sqlStringDateFormat(taskDueOn) : "");
 
         // Task project color
         String projectColor = cursor.getString(LoadersColumns.COL_TASK_PROJECT_COLOR);
         viewHolder.taskProjectColor.setBackgroundColor(GsanaProjectsAdapter.getColor(context, projectColor));
 
         if (mTogglEnabled) {
-            String startDate = cursor.getString(LoadersColumns.COL_TASK_TOGGLE_START_DATE);
-            String endDate = cursor.getString(LoadersColumns.COL_TASK_TOGGLE_END_DATE);
+            final String startDate = cursor.getString(LoadersColumns.COL_TASK_TOGGL_START_DATE);
+            final String endDate = cursor.getString(LoadersColumns.COL_TASK_TOGGL_END_DATE);
             if (startDate != null) {
                 if (endDate != null) {
-                    viewHolder.taskStartTimer.setChecked(false);
+//                    viewHolder.toggleTimer.setChecked(false);
                 } else {
-                    Date start = DateUtil.convertStringToDate(startDate);
-                    long duration = System.currentTimeMillis() - start.getTime();
-                    viewHolder.taskTimer.setBase(duration);
-                    viewHolder.taskStartTimer.setChecked(true);
-                    viewHolder.taskTimer.start();
+//                    viewHolder.toggleTimer.setChecked(true);
+//                    Date start = DateUtil.convertStringToDate(startDate);
+//                    long duration = SystemClock.elapsedRealtime() + start.getTime();
+//                    viewHolder.taskTimer.setBase(duration);
+//                    viewHolder.taskTimer.start();
                 }
             }
 
-            viewHolder.taskStartTimer.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.i(LOG_TAG, "Start timer");
-                    if (viewHolder.taskStartTimer.isChecked()) {
-                        viewHolder.taskStartTimer.setChecked(false);
-                        // TODO: stop time entry
-                        viewHolder.taskTimer.stop();
-                    } else {
-                        viewHolder.taskStartTimer.setChecked(true);
-                        Toast.makeText(context,
-                                "Starting timer for " + cursor.getString(LoadersColumns.COL_TASK_ID),
-                                Toast.LENGTH_SHORT).show();
-                        StartTimeAsyncTask startTimeAsyncTask = new StartTimeAsyncTask();
-                        startTimeAsyncTask.execute(new Object[]{cursor, viewHolder});
-                    }
-                }
-            });
+//            viewHolder.toggleTimer.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    if (viewHolder.toggleTimer.isChecked()) {
+//                        Toast.makeText(context,
+//                                "Starting timer for " + cursor.getString(LoadersColumns.COL_TASK_ID),
+//                                Toast.LENGTH_SHORT).show();
+//                        Date start = new Date();
+//                        if (endDate != null) {
+//                            start = DateUtil.convertStringToDate(endDate);
+//                        }
+//                        if (startDate != null) {
+//                            start = DateUtil.convertStringToDate(startDate);
+//                        }
+//                        long duration = System.currentTimeMillis() - start.getTime();
+//                        viewHolder.taskTimer.setBase(duration);
+//                        viewHolder.taskTimer.start();
+//                    } else {
+//                        Toast.makeText(context,
+//                                "Stopping timer for " + cursor.getString(LoadersColumns.COL_TASK_ID),
+//                                Toast.LENGTH_SHORT).show();
+//                        viewHolder.taskTimer.stop();
+//                    }
+//                    TimeEntryAsyncTask timeEntryAsyncTask = new TimeEntryAsyncTask();
+//                    timeEntryAsyncTask.execute(
+//                            new Object[]{cursor, viewHolder.toggleTimer.isChecked()});
+//                }
+//            });
         }
     }
 
-    private class StartTimeAsyncTask extends AsyncTask<Object, Void, TimeEntry> {
-        private ViewHolder mViewHolder;
-
+    private class TimeEntryAsyncTask extends AsyncTask<Object, Void, Void> {
         @Override
-        protected TimeEntry doInBackground(Object... params) {
+        protected Void doInBackground(Object... params) {
+            GToggl gToggl = new GToggl(mContext, mTogglApiKey);
             Cursor cursor = (Cursor) params[0];
-            mViewHolder = (ViewHolder) params[1];
+            Boolean isStarted = (Boolean) params[1];
             TimeEntry timeEntry = new TimeEntry();
             Long tEntryId = cursor.getLong(LoadersColumns.COL_TASK_TOGGL_ENTRY_ID);
+            timeEntry.setDescription(cursor.getString(LoadersColumns.COL_TASK_NAME));
             if (tEntryId != null) {
                 timeEntry.setId(tEntryId);
+                if (!isStarted) {
+                    timeEntry.setStop(new Date());
+                    timeEntry = gToggl.updateTimeEntry(timeEntry);
+                } else {
+                    timeEntry.setStart(new Date());
+                    timeEntry.setStop(null);
+                    timeEntry = gToggl.updateTimeEntry(timeEntry);
+                }
+            } else {
+                timeEntry = gToggl.startTimeEntry(timeEntry);
             }
-            timeEntry.setStart(new Date());
-            timeEntry.setDescription(cursor.getString(LoadersColumns.COL_TASK_NAME));
-            GToggl gToggl = new GToggl(mContext, mTogglApiKey);
-            timeEntry = gToggl.startTimeEntry(timeEntry);
             ContentValues cv = new ContentValues();
             cv.put(GsanaContract.TaskEntry.COLUMN_TOGGL_START_DATE, DateUtil.convertDateToString(timeEntry.getStart()));
+            if (timeEntry.getStop() != null) {
+                cv.put(GsanaContract.TaskEntry.COLUMN_TOGGL_END_DATE, DateUtil.convertDateToString(timeEntry.getStop()));
+            }
             cv.put(GsanaContract.TaskEntry.COLUMN_TOGGL_ENTRY_ID, timeEntry.getId());
             mContext.getContentResolver().update(GsanaContract.TaskEntry.buildTaskUri(
                             cursor.getLong(LoadersColumns.COL_TASK_ID)),
                     cv, null, null);
-            return timeEntry;
-        }
-
-        @Override
-        protected void onPostExecute(TimeEntry timeEntry) {
-            super.onPostExecute(timeEntry);
-            // Start timer
-            mViewHolder.taskTimer.start();
+            mContext.getContentResolver().notifyChange(GsanaContract.TaskEntry.CONTENT_URI, null);
+            return null;
         }
     }
 }

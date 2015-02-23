@@ -36,7 +36,8 @@ public class LoadersColumns {
             GsanaContract.TaskEntry.COLUMN_TASK_PARENT_ID,
             GsanaContract.TaskEntry.COLUMN_TOGGL_ENTRY_ID,
             GsanaContract.TaskEntry.COLUMN_TOGGL_START_DATE,
-            GsanaContract.TaskEntry.COLUMN_TOGGL_END_DATE
+            GsanaContract.TaskEntry.COLUMN_TOGGL_END_DATE,
+            GsanaContract.ProjectEntry.TABLE_NAME + "." + GsanaContract.ProjectEntry.COLUMN_PROJECT_NAME,
     };
 
     // The indices that correspond to ASANA_TASK_COLUMNS
@@ -55,8 +56,9 @@ public class LoadersColumns {
     public static final int COL_TASK_MODIFIED_AT = 13;
     public static final int COL_TASK_PARENT_ID = 14;
     public static final int COL_TASK_TOGGL_ENTRY_ID = 15;
-    public static final int COL_TASK_TOGGLE_START_DATE = 16;
-    public static final int COL_TASK_TOGGLE_END_DATE = 16;
+    public static final int COL_TASK_TOGGL_START_DATE = 16;
+    public static final int COL_TASK_TOGGL_END_DATE = 17;
+    public static final int COL_TASK_PROJECT_NAME = 18;
 
     // Specify the order of columns for projects
     public static final String[] ASANA_PROJECTS_COLUMNS = {
@@ -77,7 +79,8 @@ public class LoadersColumns {
             GsanaContract.UserEntry.COLUMN_USER_ID,
             GsanaContract.UserEntry.COLUMN_USER_NAME,
             GsanaContract.UserEntry.COLUMN_USER_EMAIL,
-            GsanaContract.UserEntry.COLUMN_USER_PHOTO_60,
+            GsanaContract.UserEntry.COLUMN_USER_PHOTO_URL_60,
+            GsanaContract.UserEntry.COLUMN_USER_PHOTO_URL_128,
             GsanaContract.UserEntry.COLUMN_USER_PHOTO
     };
 
@@ -86,5 +89,6 @@ public class LoadersColumns {
     public static final int COL_USER_NAME = 2;
     public static final int COL_USER_EMAIL = 3;
     public static final int COL_USER_PHOTO_60 = 4;
-    public static final int COL_USER_PHOTO = 5;
+    public static final int COL_USER_PHOTO_128 = 5;
+    public static final int COL_USER_PHOTO = 6;
 }

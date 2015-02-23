@@ -95,7 +95,8 @@ public class AsanaApiBridge {
             urlConnection.setRequestProperty("Client", "Geaden Asana Android Client. Version: 0.1-b");
             Log.d(LOG_TAG, String.format("Bearer %s", accessToken));
             urlConnection.setRequestProperty("Authorization", String.format("Bearer %s", accessToken));
-            if (params != null && (httpMethod.equals(POST) || httpMethod.equals(PUT))) {
+            if (params != null && (httpMethod.equals(HttpHelper.Method.POST)
+                    || httpMethod.equals(HttpHelper.Method.PUT))) {
                 urlConnection.setRequestProperty("Content-Type",
                         "application/json");
                 urlConnection.setRequestProperty("Content-Length", "" +
@@ -114,7 +115,7 @@ public class AsanaApiBridge {
             urlConnection.connect();
             int serverCode = urlConnection.getResponseCode();
             // successful query
-            if (serverCode == OK) {
+            if (serverCode == HttpHelper.ResponseCode.OK) {
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
                 StringBuffer buffer = new StringBuffer();
@@ -139,7 +140,7 @@ public class AsanaApiBridge {
                 }
                 responseData = buffer.toString();
                 Log.v(LOG_TAG, "Response: " + responseData);
-            } else if (serverCode == UNAUTHORIZED) {
+            } else if (serverCode == HttpHelper.ResponseCode.UNAUTHORIZED) {
                 Log.d(LOG_TAG, "serverCode 401");
                 Log.d(LOG_TAG, "Refreshing token and retrying...");
                 String refreshToken = Utility.getRefreshToken(mContext);

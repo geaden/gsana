@@ -32,5 +32,7 @@
     <string name="pref_toggl_connect_title">Toggl</string>
     <string name="pref_toggle_connect_settings_key">toggl_settings_key</string>
     <string name="perf_toggle_connect_summary">Your Toggl API to enable time tracking</string>
+    <string name="pref_toggl_enable">TOGGL_KEY_ENABLE</string>
+    <string name="pref_toggl_enable_title">Enable time trackgin with Toggl</string>
 
 </resources>

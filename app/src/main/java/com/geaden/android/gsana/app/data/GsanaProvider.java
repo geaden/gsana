@@ -32,6 +32,7 @@ public class GsanaProvider extends ContentProvider {
     private static final int USER_ID = 401;
 
     private static final SQLiteQueryBuilder sTasksByWorkspaceQueryBuilder;
+    private static final SQLiteQueryBuilder sTasksWithProjectQueryBuilder;
 
     static{
         sTasksByWorkspaceQueryBuilder = new SQLiteQueryBuilder();
@@ -42,10 +43,21 @@ public class GsanaProvider extends ContentProvider {
                         "." + GsanaContract.WorkspaceEntry.COLUMN_WORKSPACE_ID +
                         " = " + GsanaContract.TaskEntry.TABLE_NAME +
                         "." + GsanaContract.TaskEntry.COLUMN_TASK_WORKSPACE_ID);
+        sTasksWithProjectQueryBuilder = new SQLiteQueryBuilder();
+        sTasksWithProjectQueryBuilder.setTables(
+                GsanaContract.TaskEntry.TABLE_NAME +
+                        " LEFT JOIN " + GsanaContract.ProjectEntry.TABLE_NAME +
+                        " ON " + GsanaContract.TaskEntry.TABLE_NAME + "." +
+                        GsanaContract.TaskEntry.COLUMN_TASK_PROJECT_ID + " = " +
+                        GsanaContract.ProjectEntry.TABLE_NAME + "." +
+                        GsanaContract.ProjectEntry.COLUMN_PROJECT_ID
+        );
     }
 
-    /** Define common use SQL **/
-    private static final String sTaskWorkspaceSelectioin = "";
+    /** Define common use SQL selection **/
+    private static final String sTaskWorkspaceSelection = "";
+    private static final String sTaskSelection = GsanaContract.TaskEntry.COLUMN_TASK_ID + " = ?";
+    private static final String sTasksListSelection = GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED + " = 'false'";
 
 
     /**
@@ -176,12 +188,20 @@ public class GsanaProvider extends ContentProvider {
                 }
                 Log.d(LOG_TAG, "Projection string " + projectionString);
                 // TODO: User query builder
-                retCursor = mOpenHelper.getReadableDatabase().rawQuery(
-                        "SELECT " + projectionString + " FROM " + GsanaContract.TaskEntry.TABLE_NAME +
-                        " LEFT JOIN " + GsanaContract.ProjectEntry.TABLE_NAME +
-                        " ON " + GsanaContract.TaskEntry.COLUMN_TASK_PROJECT_ID + " = " + GsanaContract.ProjectEntry.COLUMN_PROJECT_ID,
-                        null
-                );
+                retCursor = sTasksWithProjectQueryBuilder.query(
+                        mOpenHelper.getReadableDatabase(),
+                        projection,
+                        sTasksListSelection,
+                        null,
+                        null,
+                        null,
+                        sortOrder);
+//                retCursor = mOpenHelper.getReadableDatabase().rawQuery(
+//                        "SELECT " + projectionString + " FROM " + GsanaContract.TaskEntry.TABLE_NAME +
+//                        " LEFT JOIN " + GsanaContract.ProjectEntry.TABLE_NAME +
+//                        " ON " + GsanaContract.TaskEntry.COLUMN_TASK_PROJECT_ID + " = " + GsanaContract.ProjectEntry.COLUMN_PROJECT_ID,
+//                        null
+//                );
 //                retCursor = mOpenHelper.getReadableDatabase().query(
 //                        GsanaContract.TaskEntry.TABLE_NAME,
 //                        projection,
@@ -195,11 +215,13 @@ public class GsanaProvider extends ContentProvider {
             // "task/*"
             case TASK_ID:
             {
-                retCursor = mOpenHelper.getReadableDatabase().query(
-                        GsanaContract.TaskEntry.TABLE_NAME,
+                String taskId = String.valueOf(ContentUris.parseId(uri));
+                selectionArgs = new String[]{taskId};
+                retCursor = sTasksWithProjectQueryBuilder.query(
+                        mOpenHelper.getReadableDatabase(),
                         projection,
-                        GsanaContract.TaskEntry.COLUMN_TASK_ID + " = '" + ContentUris.parseId(uri) + "'",
-                        null,
+                        sTaskSelection,
+                        selectionArgs,
                         null,
                         null,
                         sortOrder

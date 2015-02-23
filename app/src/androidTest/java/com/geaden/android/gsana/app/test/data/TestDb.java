@@ -1,7 +1,6 @@
 package com.geaden.android.gsana.app.test.data;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
@@ -16,7 +15,6 @@ import com.geaden.android.gsana.app.data.GsanaDbHelper;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 public class TestDb extends AndroidTestCase {
 
@@ -146,7 +144,7 @@ public class TestDb extends AndroidTestCase {
         testUserValues.put(UserEntry.COLUMN_USER_ID, TEST_USER_ID);
         testUserValues.put(UserEntry.COLUMN_USER_NAME, "Greg Sanchez");
         testUserValues.put(UserEntry.COLUMN_USER_EMAIL, "gsanchez@example.com");
-        testUserValues.put(UserEntry.COLUMN_USER_PHOTO_60, "https://s3.amazon.com/abcdef/");
+        testUserValues.put(UserEntry.COLUMN_USER_PHOTO_URL_60, "https://s3.amazon.com/abcdef/");
 
         return testUserValues;
     }

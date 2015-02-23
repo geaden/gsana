@@ -13,7 +13,7 @@
         android:layout_height="match_parent"
         android:background="@color/gray"
         android:id="@+id/list_item_asana_task_project_color"
-        android:layout_marginRight="16dp"/>
+        android:layout_marginRight="4dp"/>
 
     <TextView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="50dp"
@@ -31,22 +31,23 @@
         android:text="Due On"
         android:id="@+id/list_item_asana_task_due_on" />
 
-    <Chronometer xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/toggl_task_timer"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="center"/>
+    <!--<Chronometer xmlns:android="http://schemas.android.com/apk/res/android"-->
+        <!--&lt;!&ndash;android:id="@+id/toggl_task_timer"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_width="wrap_content"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_height="match_parent"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_weight="1"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:gravity="center"/>&ndash;&gt;-->
 
-    <ToggleButton xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:checked="false"
-        android:gravity="center"
-        android:layout_gravity="center"
-        android:textOff=""
-        android:textOn=""
-        android:background="@drawable/btn_toggl_start"
-        android:id="@+id/list_item_asana_task_start_timer" />
+    <!--&lt;!&ndash;<ToggleButton xmlns:android="http://schemas.android.com/apk/res/android"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_width="32dp"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_height="32dp"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:checked="false"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:gravity="center"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:layout_gravity="center"&ndash;&gt;-->
+        <!--&lt;!&ndash;android:textOff=""&ndash;&gt;-->
+        <!--&lt;!&ndash;android:textOn=""&ndash;&gt;-->
+        <!--&lt;!&ndash;android:background="@drawable/btn_toggl_start"&ndash;&gt;-->
+        <!--android:id="@+id/list_item_asana_task_start_timer"-->
+        <!--android:clickable="true" />-->
 
 </LinearLayout>

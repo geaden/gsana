@@ -18,7 +18,7 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
     private static GsanaDbHelper sInstance;
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 13;
+    private static final int DATABASE_VERSION = 15;
 
     public static final String DATABASE_NAME = "gsana.db";
 
@@ -102,7 +102,10 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
                 UserEntry.COLUMN_USER_ID + " INTEGER UNIQUE NOT NULL, " +
                 UserEntry.COLUMN_USER_EMAIL + " TEXT NOT NULL, " +
                 UserEntry.COLUMN_USER_NAME + " TEXT NOT NULL, " +
-                UserEntry.COLUMN_USER_PHOTO_60 + " TEXT NOT NULL, " +
+                UserEntry.COLUMN_USER_PHOTO_URL_60 + " TEXT NOT NULL, " +
+                UserEntry.COLUMN_USER_PHOTO_URL_128 + " TEXT NOT NULL, " +
+                UserEntry.COLUMN_USER_PHOTO_60 + " BLOB, " +
+                UserEntry.COLUMN_USER_PHOTO_128 + " BLOB, " +
                 UserEntry.COLUMN_USER_PHOTO + " BLOB" +
                 " );";
 

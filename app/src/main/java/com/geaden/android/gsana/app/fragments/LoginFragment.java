@@ -1,4 +1,4 @@
-package com.geaden.android.gsana.app;
+package com.geaden.android.gsana.app.fragments;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -12,6 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 
+import com.geaden.android.gsana.app.MainActivity;
+import com.geaden.android.gsana.app.R;
+import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
 
 /**

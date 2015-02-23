@@ -1,4 +1,4 @@
-package com.geaden.android.gsana.app;
+package com.geaden.android.gsana.app.adapters;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -9,6 +9,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
+
+import com.geaden.android.gsana.app.LoadersColumns;
+import com.geaden.android.gsana.app.R;
 
 /**
  * Adapter for mapping projects to the view.

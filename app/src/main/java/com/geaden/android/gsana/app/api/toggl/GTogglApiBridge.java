@@ -101,7 +101,8 @@ public class GTogglApiBridge {
             if (encodedAuthString == null) return;
             Log.d(LOG_TAG, String.format("Basic %s", encodedAuthString));
             urlConnection.setRequestProperty("Authorization", String.format("Basic %s", encodedAuthString));
-            if (httpMethod.equals(HttpHelper.Method.POST) || httpMethod.equals(HttpHelper.Method.PUT)) {
+            if (null != params && (httpMethod.equals(HttpHelper.Method.POST)
+                    || httpMethod.equals(HttpHelper.Method.PUT))) {
                 Log.i(LOG_TAG, "Params: " + params);
                 urlConnection.setRequestProperty("Content-Type",
                         "application/json");

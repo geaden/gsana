@@ -1,4 +1,4 @@
-package com.geaden.android.gsana.app;
+package com.geaden.android.gsana.app.fragments;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -17,6 +17,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.geaden.android.gsana.app.adapters.GsanaProjectsAdapter;
+import com.geaden.android.gsana.app.adapters.GsanaTasksAdapter;
+import com.geaden.android.gsana.app.LoadersColumns;
+import com.geaden.android.gsana.app.MainActivity;
+import com.geaden.android.gsana.app.R;
+import com.geaden.android.gsana.app.TaskCreateActivity;
+import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
 
 import com.melnykov.fab.FloatingActionButton;

@@ -208,6 +208,33 @@ public class GToggl {
      */
     public TimeEntry stopTimeEntry(final TimeEntry timeEntry) {
         mTogglApiBridge.request(HttpHelper.Method.PUT, TIME_ENTRY_STOP.replace(PLACEHOLDER, timeEntry.getId().toString()),
+                null, new GTogglApiBridge.GTogglCallback<GTogglApiBridge.GTogglResponse>() {
+                    @Override
+                    public void onResult(GTogglApiBridge.GTogglResponse value) {
+                        if (value == null) {
+                            return;
+                        }
+                        JSONObject timeEntryJson = (JSONObject) value.getData();
+                        TimeEntry timeEntryResult = new TimeEntry(timeEntryJson);
+                        timeEntry.setStop(timeEntryResult.getStop());
+                    }
+
+                    @Override
+                    public void onError(Throwable exception) {
+
+                    }
+                });
+        return timeEntry;
+    }
+
+    /**
+     * Update a time entry.
+     *
+     * @param timeEntry
+     * @return created {@link TimeEntry}
+     */
+    public TimeEntry updateTimeEntry(final TimeEntry timeEntry) {
+        mTogglApiBridge.request(HttpHelper.Method.PUT, TIME_ENTRY.replace(PLACEHOLDER, timeEntry.getId().toString()),
                 timeEntry.toJSONString(), new GTogglApiBridge.GTogglCallback<GTogglApiBridge.GTogglResponse>() {
                     @Override
                     public void onResult(GTogglApiBridge.GTogglResponse value) {
@@ -217,6 +244,7 @@ public class GToggl {
                         JSONObject timeEntryJson = (JSONObject) value.getData();
                         TimeEntry timeEntryResult = new TimeEntry(timeEntryJson);
                         timeEntry.setStop(timeEntryResult.getStop());
+                        timeEntry.setStart(timeEntryResult.getStart());
                     }
 
                     @Override

@@ -5,7 +5,10 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 /**
  * Common utils.
@@ -127,5 +130,25 @@ public class Utility {
         }
         Log.d(Utility.class.getSimpleName(), "Time of day: " + timeOfDay);
         return timeOfDay;
+    }
+
+    /**
+     * Formats sqlDate (yyyy-MM-dd) to something like Feb 2, 2015
+     * @param sqlDate the date from SQL
+     * @return formatted date
+     */
+    public static String sqlStringDateFormat(String sqlDate) {
+        String formattedDate = sqlDate;
+        final String CURR_DATE_FORMAT = "yyyy-MM-dd";
+        final String DATE_FORMAT = "MMM d, yyyy";
+        SimpleDateFormat currSdf = new SimpleDateFormat(CURR_DATE_FORMAT);
+        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+        try {
+            Date date = currSdf.parse(sqlDate);
+            formattedDate = sdf.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return formattedDate;
     }
 }

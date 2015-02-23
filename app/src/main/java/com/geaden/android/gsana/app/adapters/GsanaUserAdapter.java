@@ -1,4 +1,4 @@
-package com.geaden.android.gsana.app;
+package com.geaden.android.gsana.app.adapters;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -12,6 +12,9 @@ import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.geaden.android.gsana.app.LoadersColumns;
+import com.geaden.android.gsana.app.R;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -6,66 +6,116 @@
     <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_margin="4dp"
         android:orientation="vertical">
 
         <!-- Assignee Information -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_margin="4dp"
-            android:layout_weight="4"
             android:orientation="horizontal">
             <ImageView
+                android:id="@+id/asana_task_assignee_photo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_launcher"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:fontFamily="sans-serif-condensed"
+                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="Gennady Denisov"
-                android:layout_marginTop="16dp"
-                android:layout_marginLeft="16dp"
-                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="@dimen/abc_action_bar_default_padding_material"
+                android:gravity="center_vertical"
                 android:id="@+id/asana_task_assignee"/>
         </LinearLayout>
+
         <!-- Task information -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="4dp"
-            android:orientation="horizontal">
+            android:layout_height="0px"
+            android:orientation="horizontal"
+            android:layout_weight="20">
             <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/asana_task_compeleted" />
             <TextView
-                xmlns:android="http://schemas.android.com/apk/res/android"
                 android:id="@+id/asana_task_name"
+                android:fontFamily="sans-serif-condensed"
+                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:text="Finish Mockups"
+                android:gravity="center_vertical"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
         </LinearLayout>
+
+        <!-- Task project info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0px"
+            android:orientation="horizontal"
+            android:layout_weight="10">
+            <TextView
+                android:id="@+id/asana_task_detail_project"
+                android:text="Project 1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!--Task Description-->
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="500dip"
-            android:layout_margin="4dp"
+            android:layout_height="match_parent"
             android:text="Task Description"
             android:autoLink="web|email"
-            android:id="@+id/asana_task_description" />
+            android:fontFamily="sans-serif-condensed"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/asana_task_description"
+            android:layout_weight="10"/>
+
+        <!--Toggl integration-->
         <LinearLayout
+            android:id="@+id/toggl_timer_section"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal">
+            <ToggleButton
+                android:id="@+id/btn_toggl_start_timer"
+                android:background="@drawable/btn_toggl_start"
+                android:layout_width="48dp"
+                android:textOff=""
+                android:textOn=""
+                android:layout_height="48dp" />
+            <Chronometer
+                android:id="@+id/chrono_toggl_timer"
+                android:layout_marginLeft="16dp"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+        <!-- Task actions -->
+        <ListView
+            android:id="@+id/task_actions_listview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <!--Task comment-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:layout_weight="10">
             <EditText
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="Comment Task"
+                android:hint="Add comment"
+                android:fontFamily="sans-serif-condensed"
                 android:layout_weight="2"/>
             <ImageButton
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:src="@drawable/abc_ic_search_api_mtrl_alpha"/>
+                android:background="@android:drawable/ic_menu_send"/>
             </LinearLayout>
     </LinearLayout>
 </ScrollView>
