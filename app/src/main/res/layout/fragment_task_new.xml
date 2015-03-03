@@ -6,16 +6,15 @@
     
     <EditText
         android:layout_width="match_parent"
-        android:text="Task Name"
+        android:hint="Task Name"
         android:id="@+id/task_name"
         android:layout_height="20pt" />
 
     <EditText
         android:layout_width="match_parent"
-        android:text="Task Description"
+        android:hint="Task Description"
         android:id="@+id/task_description"
         android:layout_height="100pt" />
-
 
     <Button
         android:layout_width="wrap_content"

@@ -58,13 +58,13 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
     /** Loaders **/
     private static final int TASK_DETAIL_LOADER = 0;
     private static final int USER_DETAIL_LOADER = 1;
+
+    // TODO: Implement task comments loading
     private static final int TASK_COMMENTS_LOADER = 2;
 
     private static final int TASK_NOTIFICATION_ID = 3004;
 
     private ShareActionProvider mShareActionProvider;
-
-    private static final String ASANA_TASK_KEY = "task";
 
     private static final String GSANA_SHARE_HASHTAG = " #YetAnotherAndroidClientForAsana";
 
@@ -91,7 +91,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putString(ASANA_TASK_KEY, mTaskId);
+        outState.putString(TaskDetailActivity.TASK_KEY, mTaskId);
         super.onSaveInstanceState(outState);
     }
 
@@ -114,7 +114,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
 
     private Intent createShareForecastIntent() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_TEXT, mShareTask + GSANA_SHARE_HASHTAG);
         return shareIntent;
@@ -125,10 +125,13 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         Bundle arguments = getArguments();
-        Log.v(LOG_TAG, "Arguments: " + arguments);
         if (arguments != null) {
             mTaskId = arguments.getString(TaskDetailActivity.TASK_KEY);
             Log.v(LOG_TAG, "Task ID: " + mTaskId);
+        }
+
+        if (savedInstanceState != null) {
+            mTaskId = savedInstanceState.getString(TaskDetailActivity.TASK_KEY);
         }
 
         String accessToken = Utility.getAccessToken(getActivity());
@@ -164,7 +167,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
-            mTaskId = savedInstanceState.getString(ASANA_TASK_KEY);
+            mTaskId = savedInstanceState.getString(TaskDetailActivity.TASK_KEY);
         }
 
         Bundle arguments = getArguments();

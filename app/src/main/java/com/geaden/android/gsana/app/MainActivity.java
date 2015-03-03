@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 
 import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.fragments.MainDrawerFragment;
+import com.geaden.android.gsana.app.fragments.TaskDetailFragment;
 import com.geaden.android.gsana.app.fragments.TaskListFragment;
 import com.geaden.android.gsana.app.models.AsanaUser;
 import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
@@ -25,6 +26,9 @@ import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
  */
 public class MainActivity extends ActionBarActivity implements TaskListFragment.Callback {
     private final String LOG_TAG = getClass().getSimpleName();
+
+    // Indicates whether current view in two pane mode
+    private boolean mTwoPane;
 
     public static final String ACCESS_TOKEN_KEY = "access_token";
 
@@ -89,6 +93,23 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
 
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
+
+            if (findViewById(R.id.task_detail_container) != null) {
+                // The detail container view will be present only in the large-screen layouts
+                // (res/layout-sw600dp). If this view is present, then the activity should be
+                // in two-pane mode.
+                mTwoPane = true;
+                // In two-pane mode, show the detail view in this activity by
+                // adding or replacing the detail fragment using a
+                // fragment transaction.
+                if (savedInstanceState == null) {
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.task_detail_container, new TaskDetailFragment())
+                            .commit();
+                }
+            } else {
+                mTwoPane = false;
+            }
 
             if (savedInstanceState == null) {
                 TaskListFragment taskListFragment = TaskListFragment.newInstance(mAccessToken);
@@ -164,9 +185,24 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
 
     @Override
     public void onItemSelected(String taskId) {
-        // TODO: implement two panes mode
-        Intent intent = new Intent(this, TaskDetailActivity.class)
-                .putExtra(TaskDetailActivity.TASK_KEY, taskId);
-        startActivity(intent);
+        if (mTwoPane) {
+            // In two-pane mode, show the detail view in this activity by
+            // adding or replacing the detail fragment using a
+            // fragment transaction.
+            Bundle args = new Bundle();
+            args.putString(TaskDetailActivity.TASK_KEY, taskId);
+
+            TaskDetailFragment fragment = new TaskDetailFragment();
+            fragment.setArguments(args);
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.task_detail_container, fragment)
+                    .commit();
+        } else {
+            Intent intent = new Intent(this, TaskDetailActivity.class)
+                    .putExtra(TaskDetailActivity.TASK_KEY, taskId);
+            startActivity(intent);
+        }
+
     }
 }

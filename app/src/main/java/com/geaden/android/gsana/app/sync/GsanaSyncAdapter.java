@@ -39,7 +39,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 
 public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
-    public final String LOG_TAG = GsanaSyncAdapter.class.getSimpleName();
+    public static final String LOG_TAG = GsanaSyncAdapter.class.getSimpleName();
 
     private AsanaWorkspace mDefaultWorkspace;
 
@@ -413,6 +413,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     public static void initializeSyncAdapter(Context context) {
+        Log.v(LOG_TAG, "Sync adapter initializing...");
         getSyncAccount(context);
     }
 
