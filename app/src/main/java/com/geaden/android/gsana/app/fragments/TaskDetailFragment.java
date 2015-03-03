@@ -1,6 +1,9 @@
 package com.geaden.android.gsana.app.fragments;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -8,9 +11,12 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.MenuItemCompat;
@@ -31,6 +37,7 @@ import android.widget.ToggleButton;
 
 import com.geaden.android.gsana.app.LoadersColumns;
 import com.geaden.android.gsana.app.LoginActivity;
+import com.geaden.android.gsana.app.MainActivity;
 import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.TaskDetailActivity;
 import com.geaden.android.gsana.app.Utility;
@@ -52,6 +59,8 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
     private static final int TASK_DETAIL_LOADER = 0;
     private static final int USER_DETAIL_LOADER = 1;
     private static final int TASK_COMMENTS_LOADER = 2;
+
+    private static final int TASK_NOTIFICATION_ID = 3004;
 
     private ShareActionProvider mShareActionProvider;
 
@@ -231,14 +240,10 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                         final String startDate = data.getString(LoadersColumns.COL_TASK_TOGGL_START_DATE);
                         final String endDate = data.getString(LoadersColumns.COL_TASK_TOGGL_END_DATE);
                         if (startDate != null) {
-                            if (endDate != null) {
-//                    viewHolder.toggleTimer.setChecked(false);
-                            } else {
-//                    viewHolder.toggleTimer.setChecked(true);
-//                    Date start = DateUtil.convertStringToDate(startDate);
-//                    long duration = SystemClock.elapsedRealtime() + start.getTime();
-//                    viewHolder.taskTimer.setBase(duration);
-//                    viewHolder.taskTimer.start();
+                            if (endDate == null) {
+                                Date start = DateUtil.convertStringToDate(startDate);
+                                long duration = SystemClock.elapsedRealtime() + start.getTime();
+                                mTaskTimer.setBase(duration);
                             }
                         }
                         mTaskTimerToggeButton.setOnClickListener(new View.OnClickListener() {
@@ -312,20 +317,16 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         protected Void doInBackground(Object... params) {
             GToggl gToggl = new GToggl(getActivity(), mTogglApiKey);
             Cursor cursor = (Cursor) params[0];
-            Boolean isStarted = (Boolean) params[1];
+            Boolean started = (Boolean) params[1];
+            Log.v(LOG_TAG, "Started " + started);
             TimeEntry timeEntry = new TimeEntry();
             Long tEntryId = cursor.getLong(LoadersColumns.COL_TASK_TOGGL_ENTRY_ID);
             timeEntry.setDescription(cursor.getString(LoadersColumns.COL_TASK_NAME));
             if (tEntryId > 0) {
                 timeEntry.setId(tEntryId);
-                if (!isStarted) {
-                    timeEntry.setStop(new Date());
-                    timeEntry = gToggl.updateTimeEntry(timeEntry);
-                } else {
-                    timeEntry.setStart(new Date());
-                    timeEntry.setStop(null);
-                    timeEntry = gToggl.updateTimeEntry(timeEntry);
-                }
+                timeEntry.setStart(new Date());
+                timeEntry.setStop(new Date());
+                timeEntry = gToggl.updateTimeEntry(timeEntry);
             } else {
                 timeEntry = gToggl.startTimeEntry(timeEntry);
             }
@@ -338,7 +339,44 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             getActivity().getContentResolver().update(GsanaContract.TaskEntry.buildTaskUri(
                             cursor.getLong(LoadersColumns.COL_TASK_ID)),
                     cv, null, null);
-            getActivity().getContentResolver().notifyChange(GsanaContract.TaskEntry.CONTENT_URI, null);
+            NotificationCompat.Builder mBuilder =
+                    new NotificationCompat.Builder(getActivity())
+                            .setSmallIcon(R.drawable.active_38)
+                            .setContentTitle(getString(R.string.app_name))
+                            .setUsesChronometer(true)
+                            .setWhen(timeEntry.getStop().getTime())
+                            .setShowWhen(true)
+                            .setContentText(timeEntry.getDescription());
+
+            // Make something interesting happen when the user clicks on the notification.
+            // In this case, opening the app is sufficient.
+            Intent resultIntent = new Intent(getActivity(), TaskDetailActivity.class);
+            resultIntent.putExtra(TaskDetailActivity.TASK_KEY, mTaskId);
+
+            // The stack builder object will contain an artificial back stack for the
+            // started Activity.
+            // This ensures that navigating backward from the Activity leads out of
+            // your application to the Home screen.
+            TaskStackBuilder stackBuilder = TaskStackBuilder.create(getActivity());
+            stackBuilder.addNextIntent(resultIntent);
+            PendingIntent resultPendingIntent =
+                    stackBuilder.getPendingIntent(
+                            0,
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                    );
+            mBuilder.setContentIntent(resultPendingIntent);
+
+            NotificationManager mNotificationManager =
+                    (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+            // TASK_NOTIFICATION_ID allows you to update the notification later on.
+            if (started) {
+                mNotificationManager.notify(TASK_NOTIFICATION_ID, mBuilder.build());
+                Log.v(LOG_TAG, "Notified");
+            } else {
+                mNotificationManager.cancel(TASK_NOTIFICATION_ID);
+                Log.v(LOG_TAG, "Unnotified");
+            }
+
             return null;
         }
     }

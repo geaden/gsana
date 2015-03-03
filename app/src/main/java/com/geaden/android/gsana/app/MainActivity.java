@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.fragments.MainDrawerFragment;
 import com.geaden.android.gsana.app.fragments.TaskListFragment;
+import com.geaden.android.gsana.app.models.AsanaUser;
 import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
 
 
@@ -39,7 +40,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
     private String mAccessToken;
 
     // Current user first name to display
-    public static String CURRENT_USER_NAME = "";
+    public static String sCurrentUser = "";
 
     private ArrayAdapter<String> mWorkspaceAdapter;
 

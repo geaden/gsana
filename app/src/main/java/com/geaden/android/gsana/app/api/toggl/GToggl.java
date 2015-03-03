@@ -188,11 +188,12 @@ public class GToggl {
                 Log.d(LOG_TAG, timeEntryJson.toJSONString().toString());
                 TimeEntry timeEntryResult = new TimeEntry(timeEntryJson);
                 timeEntry.setId(timeEntryResult.getId());
+                timeEntry.setStart(timeEntryResult.getStart());
             }
 
             @Override
             public void onError(Throwable exception) {
-                Log.e(LOG_TAG, "Error", exception);
+                Log.e(LOG_TAG, "Error stating time entry", exception);
 
             }
         });
@@ -221,6 +222,7 @@ public class GToggl {
 
                     @Override
                     public void onError(Throwable exception) {
+                        Log.e(LOG_TAG, "Error stopping timer", exception);
 
                     }
                 });
@@ -249,7 +251,7 @@ public class GToggl {
 
                     @Override
                     public void onError(Throwable exception) {
-
+                        Log.e(LOG_TAG, "Error updating time entry", exception);
                     }
                 });
         return timeEntry;

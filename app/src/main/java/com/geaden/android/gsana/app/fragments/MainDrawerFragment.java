@@ -198,13 +198,13 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
                     }
                     String currentUserName = data.getString(LoadersColumns.COL_USER_NAME);
                     mGsanaUserVH.userNameTextView.setText(currentUserName);
-                    // Get user name
-                    MainActivity.CURRENT_USER_NAME = currentUserName.split(" ")[0];
                     byte[] blob = data.getBlob(LoadersColumns.COL_USER_PHOTO);
                     if (blob != null) {
                         Bitmap userPic = BitmapFactory.decodeByteArray(blob, 0, blob.length);
                         mGsanaUserVH.userPicImageView.setImageBitmap(userPic);
                     }
+                    // Get user name
+                    MainActivity.sCurrentUser = currentUserName.split(" ")[0];
                 }
                 break;
             default:

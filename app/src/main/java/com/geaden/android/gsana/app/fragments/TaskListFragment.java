@@ -43,6 +43,7 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     private String mCurrentWorkspace = "";
 
     private TextView mTasksForToday;
+    private TextView mGreetingTextView;
 
     private ToggleButton mStartTimerButton;
 
@@ -106,11 +107,9 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
             }
         });
 
-        String greetingTemplate = "Good %s, %s";
+        mGreetingTextView = (TextView) rootView.findViewById(R.id.greeting);
 
-        TextView greetingTextView = (TextView) rootView.findViewById(R.id.greeting);
-        // TODO propagate user first name from drawer fragment
-        greetingTextView.setText(String.format(greetingTemplate, Utility.getTimeOfTheDay(), MainActivity.CURRENT_USER_NAME));
+        updateGreetingsTextView();
 
         mTasksForToday = (TextView) rootView.findViewById(R.id.today_tasks);
 
@@ -139,6 +138,18 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
             mPosition = savedInstanceState.getInt(SELECTED_KEY);
         }
         return rootView;
+    }
+
+    /**
+     * Updates greetings text
+     */
+    private void updateGreetingsTextView() {
+        if (mGreetingTextView == null) {
+            return;
+        }
+        String greetingTemplate = getString(R.string.greeting_template);
+        mGreetingTextView.setText(String.format(greetingTemplate, Utility.getTimeOfTheDay(),
+                MainActivity.sCurrentUser));
     }
 
     @Override
