@@ -2,5 +2,8 @@
 <TextView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:text="zzz"
+    android:gravity="center_vertical"
+    android:layout_marginLeft="@dimen/drawer_workspaces_list_margin"
     android:layout_height="@dimen/drawer_workspaces_list_item_height"
     android:id="@+id/left_drawer_workspaces_list_workspace_name"/>

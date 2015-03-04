@@ -4,6 +4,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/detail_container"
+    android:background="@color/gsana_background_color"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".TaskDetailActivity"

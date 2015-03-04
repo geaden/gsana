@@ -1,14 +1,12 @@
-<!-- TODO: Add paddings -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:fab="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="MainActivity$TasksFragment">
+    android:paddingTop="@dimen/activity_top_margin"
+    android:paddingBottom="@dimen/activity_top_margin"
+    android:background="@color/gsana_background_color"
+    tools:context=".fragments.TaskListFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -19,17 +17,23 @@
                 android:layout_height="match_parent"
                 android:id="@+id/greeting"
                 android:text="Good Day Gennady"
+                android:textAppearance="?android:attr/textAppearanceLarge"
                 android:gravity="center"
+                android:fontFamily="sans-serif-condensed"
+                android:textColor="@android:color/white"
                 android:textSize="36dp"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/today_tasks"
                 android:text="You have 4 task for Today"
+                android:fontFamily="sans-serif-condensed"
+                android:textColor="@android:color/white"
                 android:gravity="center"
                 android:textSize="14dp"/>
             <ListView
                 android:id="@+id/listview_asana_tasks"
+                android:drawSelectorOnTop="true"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
         </LinearLayout>
@@ -40,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center"
             android:layout_margin="16dp"
-            android:src="@drawable/ic_content_new"
+            android:src="@drawable/ic_content_add"
             fab:fab_colorNormal="@android:color/holo_green_light"
             fab:fab_colorPressed="@android:color/holo_green_dark"/>
 </FrameLayout>

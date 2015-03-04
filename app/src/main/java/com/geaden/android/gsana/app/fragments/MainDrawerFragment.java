@@ -29,6 +29,7 @@ import com.geaden.android.gsana.app.MainActivity;
 import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.data.GsanaContract;
+import com.geaden.android.gsana.app.views.RoundedImageView;
 
 
 /**
@@ -231,11 +232,11 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
      */
     private class GsanaUserViewHolder {
         public final TextView userNameTextView;
-        public final ImageView userPicImageView;
+        public final RoundedImageView userPicImageView;
 
         public GsanaUserViewHolder(View view) {
             userNameTextView = (TextView) view.findViewById(R.id.left_drawer_user_name);
-            userPicImageView = (ImageView) view.findViewById(R.id.left_drawer_user_pic);
+            userPicImageView = (RoundedImageView) view.findViewById(R.id.left_drawer_user_pic);
 
         };
     }

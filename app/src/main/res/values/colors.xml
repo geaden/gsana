@@ -23,4 +23,9 @@
     <color name="dark_blue">#2196F3</color>
     <color name="light_teal">#80CBC4</color>
     <color name="light_yellow">#FFEE58</color>
+
+    <!-- Theme specific -->
+    <color name="gsana_background_color">#1F8DD6</color>
+    <color name="task_item_color">#686AC6</color>
+    <color name="task_due_time">#5ED16D</color>
 </resources>

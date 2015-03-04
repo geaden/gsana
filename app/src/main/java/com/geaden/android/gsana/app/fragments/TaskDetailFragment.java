@@ -245,8 +245,18 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                         if (startDate != null) {
                             if (endDate == null) {
                                 Date start = DateUtil.convertStringToDate(startDate);
-                                long duration = SystemClock.elapsedRealtime() + start.getTime();
+                                long duration = SystemClock.elapsedRealtime() - start.getTime();
                                 mTaskTimer.setBase(duration);
+                                mTaskTimer.setText((int) duration / 60000 + ":" + (int) duration / 1000);
+                                mTaskTimer.start();
+                                if (!mTaskTimerToggeButton.isChecked()) mTaskTimerToggeButton.setChecked(true);
+                            } else {
+                                Date start = DateUtil.convertStringToDate(endDate);
+                                long duration = SystemClock.elapsedRealtime() - start.getTime();
+                                mTaskTimer.setBase(duration);
+                                mTaskTimer.setText((int) duration / 60000 + ":" + (int) duration / 1000);
+                                if (mTaskTimerToggeButton.isChecked()) mTaskTimerToggeButton.setChecked(false);
+
                             }
                         }
                         mTaskTimerToggeButton.setOnClickListener(new View.OnClickListener() {
@@ -259,11 +269,17 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                                     Date start = new Date();
                                     if (endDate != null) {
                                         start = DateUtil.convertStringToDate(endDate);
+                                    } else {
+                                        if (startDate != null)
+                                            start = DateUtil.convertStringToDate(startDate);
                                     }
-                                    if (startDate != null) {
-                                        start = DateUtil.convertStringToDate(startDate);
+                                    long duration;
+                                    if (start != null) {
+                                        duration = System.currentTimeMillis() - start.getTime();
+                                    } else {
+                                        duration = 0;
                                     }
-                                    long duration = System.currentTimeMillis() - start.getTime();
+
                                     mTaskTimer.setBase(duration);
                                     mTaskTimer.start();
                                 } else {
@@ -286,7 +302,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                     String userName = data.getString(LoadersColumns.COL_USER_NAME);
                     mAssigneeTextView.setText(userName);
 
-                    byte[] blob = data.getBlob(LoadersColumns.COL_USER_PHOTO_128);
+                    byte[] blob = data.getBlob(LoadersColumns.COL_USER_PHOTO);
                     if (blob != null) {
                         Bitmap userPic = BitmapFactory.decodeByteArray(blob, 0, blob.length);
                         mAssigneeImageView.setImageBitmap(userPic);

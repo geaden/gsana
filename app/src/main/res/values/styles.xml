@@ -1,6 +1,8 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light"></style>
+    <style name="AppTheme" parent="@style/Theme.AppCompat.Light.DarkActionBar">
+        <item name="actionBarStyle">@style/ActionBar.Solid.Gsana</item>
+    </style>
 
 </resources>

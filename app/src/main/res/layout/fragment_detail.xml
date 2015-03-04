@@ -3,7 +3,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="4dp"
+    android:layout_margin="16dp"
+    android:background="@color/gsana_background_color"
     android:orientation="vertical">
 
     <!-- Assignee Information -->
@@ -11,14 +12,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-        <ImageView
+        <com.geaden.android.gsana.app.views.RoundedImageView
             android:id="@+id/asana_task_assignee_photo"
             android:layout_width="wrap_content"
-            android:src="@drawable/ic_launcher"
+            android:src="@drawable/nopicture"
             android:layout_height="wrap_content"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:textColor="@android:color/white"
             android:fontFamily="sans-serif-condensed"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:layout_marginLeft="@dimen/abc_action_bar_default_padding_material"
@@ -35,12 +37,14 @@
         <CheckBox
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
             android:id="@+id/asana_task_compeleted" />
         <TextView
             android:id="@+id/asana_task_name"
             android:fontFamily="sans-serif-condensed"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="Finish Mockups"
+            android:textColor="@android:color/white"
             android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -54,6 +58,7 @@
         android:layout_weight="1">
         <TextView
             android:id="@+id/asana_task_detail_project"
+            android:textColor="@android:color/white"
             android:text="Project 1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -64,6 +69,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Task Description"
+        android:textColor="@android:color/white"
         android:autoLink="web|email"
         android:fontFamily="sans-serif-condensed"
         android:textAppearance="?android:attr/textAppearanceMedium"
@@ -86,6 +92,8 @@
             android:id="@+id/chrono_toggl_timer"
             android:layout_marginLeft="16dp"
             android:gravity="center_vertical"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </LinearLayout>
@@ -104,12 +112,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Add comment"
+            android:textColor="@android:color/white"
             android:fontFamily="sans-serif-condensed"
             android:layout_weight="1"/>
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@android:drawable/ic_menu_send"/>
+            android:background="@drawable/ic_content_send"/>
         </LinearLayout>
 </LinearLayout>
 
