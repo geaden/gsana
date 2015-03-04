@@ -24,7 +24,7 @@ import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
 /**
  * Gsana main activity class
  */
-public class MainActivity extends ActionBarActivity implements TaskListFragment.Callback {
+public class MainActivity extends ActionBarActivity implements TaskListFragment.Callback, UserInfoListener {
     private final String LOG_TAG = getClass().getSimpleName();
 
     // Indicates whether current view in two pane mode
@@ -47,6 +47,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
     public static String sCurrentUser = "";
 
     private ArrayAdapter<String> mWorkspaceAdapter;
+    private static final String TASK_LIST_FRAGMENT = "task_list_fragment";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,7 +116,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
                 TaskListFragment taskListFragment = TaskListFragment.newInstance(mAccessToken);
                 getSupportFragmentManager().beginTransaction()
                         .add(R.id.drawer_container, MainDrawerFragment.newInstance())
-                        .add(R.id.container, taskListFragment)
+                        .add(R.id.container, taskListFragment, TASK_LIST_FRAGMENT)
                         .commit();
             }
 
@@ -203,6 +204,13 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
                     .putExtra(TaskDetailActivity.TASK_KEY, taskId);
             startActivity(intent);
         }
+    }
 
+    @Override
+    public void notifyUserInfo(String userInfo) {
+        Log.v(LOG_TAG, "Notifying user info");
+        TaskListFragment taskListFragment = (TaskListFragment) getSupportFragmentManager()
+                .findFragmentByTag(TASK_LIST_FRAGMENT);
+        taskListFragment.updateGreetingsTextView(userInfo);
     }
 }

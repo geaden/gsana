@@ -39,5 +39,8 @@
     <string name="pref_toggl_enable_title">Enable time tracking with Toggl</string>
     <string name="notif_toggl_text">Toggl</string>
     <string name="notif_toggl_title">Toggl</string>
+    <string name="pref_toggle_enabled_summary">Toggl integration enabled</string>
+    <string name="pref_toggle_disabled_summary">Toggl integration disabled</string>
+    <string name="msg_enter_valid_toggl_key">Enter Toggl Key. Checkout settings</string>
 
 </resources>

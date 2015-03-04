@@ -71,6 +71,7 @@
         android:text="Task Description"
         android:textColor="@android:color/white"
         android:autoLink="web|email"
+        android:textColorLink="@color/material_blue_grey_950"
         android:fontFamily="sans-serif-condensed"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:id="@+id/asana_task_description" />

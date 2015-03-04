@@ -30,6 +30,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.Chronometer;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -79,11 +80,16 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
     private CheckBox mTaskCompletedView;
     private TextView mTaskNotesTextView;
     private ImageView mAssigneeImageView;
-    private ToggleButton mTaskTimerToggeButton;
+
+    /** Toggl integration */
     private String mTogglApiKey;
     private boolean mTogglEnabled;
+    private boolean mTogglKeyValid;
+
+    private ToggleButton mTaskTimerToggeButton;
     private Chronometer mTaskTimer;
     private TextView mTaskProject;
+
 
     public TaskDetailFragment() {
         setHasOptionsMenu(true);
@@ -142,13 +148,15 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         }
 
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-
+        mTogglEnabled = Utility.getBooleanPreference(getActivity(), getString(R.string.pref_toggl_enable));
         mTogglApiKey = Utility.getPreference(getActivity(), getActivity().getResources().getString(R.string.pref_toggl_api_key));
-        Log.i(LOG_TAG, "Toggle API Key: " + mTogglApiKey);
-        if (mTogglApiKey == null || mTogglApiKey.length() < 32) {
+        mTogglKeyValid = mTogglApiKey != null || mTogglApiKey.length() >= 32;
+        if (!mTogglEnabled || !mTogglKeyValid) {
             rootView.findViewById(R.id.toggl_timer_section).setVisibility(View.GONE);
-        } else {
-            mTogglEnabled = true;
+        }
+
+        if (mTogglEnabled && !mTogglKeyValid) {
+            Toast.makeText(getActivity(), getString(R.string.msg_enter_valid_toggl_key), Toast.LENGTH_SHORT).show();
         }
 
         mAssigneeTextView = (TextView) rootView.findViewById(R.id.asana_task_assignee);
@@ -239,59 +247,51 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                         mShareActionProvider.setShareIntent(createShareForecastIntent());
                     }
 
-                    if (mTogglEnabled) {
+                    if (mTogglEnabled && mTogglKeyValid) {
                         final String startDate = data.getString(LoadersColumns.COL_TASK_TOGGL_START_DATE);
                         final String endDate = data.getString(LoadersColumns.COL_TASK_TOGGL_END_DATE);
+                        //TODO: restore timer state
                         if (startDate != null) {
-                            if (endDate == null) {
-                                Date start = DateUtil.convertStringToDate(startDate);
-                                long duration = SystemClock.elapsedRealtime() - start.getTime();
-                                mTaskTimer.setBase(duration);
-                                mTaskTimer.setText((int) duration / 60000 + ":" + (int) duration / 1000);
-                                mTaskTimer.start();
-                                if (!mTaskTimerToggeButton.isChecked()) mTaskTimerToggeButton.setChecked(true);
-                            } else {
-                                Date start = DateUtil.convertStringToDate(endDate);
-                                long duration = SystemClock.elapsedRealtime() - start.getTime();
-                                mTaskTimer.setBase(duration);
-                                mTaskTimer.setText((int) duration / 60000 + ":" + (int) duration / 1000);
-                                if (mTaskTimerToggeButton.isChecked()) mTaskTimerToggeButton.setChecked(false);
-
+                            Date start = DateUtil.convertStringToDate(startDate);
+                            // Date that timer is started from
+                            if (!mTaskTimer.isActivated()) {
+                                mTaskTimer.setBase(SystemClock.elapsedRealtime() - start.getTime());
+//                                if (endDate == null) {
+//                                    // Timer is in progress
+//                                    if (!mTaskTimerToggeButton.isChecked()) mTaskTimerToggeButton.setChecked(true);
+//                                } else {
+//                                    if (mTaskTimerToggeButton.isChecked()) mTaskTimerToggeButton.setChecked(false);
+//
+//                                }
                             }
+
+//                            mTaskTimer.setText(Utility.getTimerFormatted(duration));
                         }
-                        mTaskTimerToggeButton.setOnClickListener(new View.OnClickListener() {
+                        mTaskTimerToggeButton.setOnCheckedChangeListener(new ToggleButton.OnCheckedChangeListener() {
                             @Override
-                            public void onClick(View v) {
-                                if (mTaskTimerToggeButton.isChecked()) {
-                                    Toast.makeText(getActivity(),
-                                            "Starting timer for " + data.getString(LoadersColumns.COL_TASK_ID),
-                                            Toast.LENGTH_SHORT).show();
+                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                Toast.makeText(getActivity(),
+                                        String.format("%s timer for " + data.getString(LoadersColumns.COL_TASK_NAME),
+                                                isChecked ? "Starting" : "Stopping"),
+                                        Toast.LENGTH_SHORT).show();
+                                if (isChecked) {
                                     Date start = new Date();
                                     if (endDate != null) {
                                         start = DateUtil.convertStringToDate(endDate);
+                                    } else if (startDate != null) {
+                                        start = DateUtil.convertStringToDate(startDate);
                                     } else {
-                                        if (startDate != null)
-                                            start = DateUtil.convertStringToDate(startDate);
+                                        start = new Date();
                                     }
-                                    long duration;
-                                    if (start != null) {
-                                        duration = System.currentTimeMillis() - start.getTime();
-                                    } else {
-                                        duration = 0;
-                                    }
-
-                                    mTaskTimer.setBase(duration);
+                                    mTaskTimer.setBase(SystemClock.elapsedRealtime() - start.getTime());
                                     mTaskTimer.start();
                                 } else {
-                                    Toast.makeText(getActivity(),
-                                            "Stopping timer for " + data.getString(LoadersColumns.COL_TASK_ID),
-                                            Toast.LENGTH_SHORT).show();
                                     mTaskTimer.stop();
                                 }
                                 TimeEntryAsyncTask timeEntryAsyncTask = new TimeEntryAsyncTask();
                                 timeEntryAsyncTask.execute(
-                                        new Object[]{data, mTaskTimerToggeButton.isChecked()});
-                            }
+                                        new Object[]{data, isChecked});
+                            };
                         });
                     }
                 }
@@ -360,12 +360,12 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                     cv, null, null);
             NotificationCompat.Builder mBuilder =
                     new NotificationCompat.Builder(getActivity())
-                            .setSmallIcon(R.drawable.active_38)
-                            .setContentTitle(getString(R.string.app_name))
+                            .setSmallIcon(R.drawable.ic_toggl_notification)
+                            .setContentTitle(timeEntry.getDescription())
                             .setUsesChronometer(true)
-                            .setWhen(timeEntry.getStop().getTime())
+                            .setWhen(SystemClock.elapsedRealtime() - timeEntry.getStart().getTime())
                             .setShowWhen(true)
-                            .setContentText(timeEntry.getDescription());
+                            .setContentText(getString(R.string.app_name));
 
             // Make something interesting happen when the user clicks on the notification.
             // In this case, opening the app is sufficient.
@@ -390,10 +390,8 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             // TASK_NOTIFICATION_ID allows you to update the notification later on.
             if (started) {
                 mNotificationManager.notify(TASK_NOTIFICATION_ID, mBuilder.build());
-                Log.v(LOG_TAG, "Notified");
             } else {
                 mNotificationManager.cancel(TASK_NOTIFICATION_ID);
-                Log.v(LOG_TAG, "Unnotified");
             }
 
             return null;

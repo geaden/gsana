@@ -209,4 +209,16 @@ public class GsanaContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
     }
+
+    /** Defines relationship between task and project. Auxiliary table */
+    public static class TaskProjectEntry implements BaseColumns {
+        // Table name
+        public static final String TABLE_NAME = "tasks_projects";
+
+        // User id column name
+        public static final String COLUMN_TASK_ID = "task_id";
+
+        // User email column name
+        public static final String COLUMN_PROJECT_ID = "project_id";
+    }
 }

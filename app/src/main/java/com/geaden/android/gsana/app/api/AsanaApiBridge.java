@@ -77,6 +77,7 @@ public class AsanaApiBridge {
      * @param httpMethod HTTP request method to use (e.g. "POST")
      * @param path Path to call.
      */
+    // TODO: Use Jackson mapper
     public void request(String httpMethod, String path, String params,
                         AsanaCallback<AsanaResponse> callback) {
         String accessToken = Utility.getAccessToken(mContext);
@@ -141,14 +142,12 @@ public class AsanaApiBridge {
                 responseData = buffer.toString();
                 Log.v(LOG_TAG, "Response: " + responseData);
             } else if (serverCode == HttpHelper.ResponseCode.UNAUTHORIZED) {
-                Log.d(LOG_TAG, "serverCode 401");
                 Log.d(LOG_TAG, "Refreshing token and retrying...");
                 String refreshToken = Utility.getRefreshToken(mContext);
                 AsanaOAuthClient.AsanaTokenResponse tokenResponse = mAsanaOAuthClient.refreshToken(refreshToken);
                 // Update values in shared preferences
                 Utility.putSettingsStringValue(mContext, Utility.ACCESS_TOKEN_KEY, tokenResponse.getAccessToken());
                 Utility.putSettingsStringValue(mContext, Utility.REFRESH_TOKEN_KEY, tokenResponse.getRefreshToken());
-                Utility.putSettingsStringValue(mContext, Utility.CURRENT_USER_KEY, String.valueOf(tokenResponse.getUser().getId()));
                 request(httpMethod, path, params, callback);
                 return;
             } else {
@@ -158,7 +157,6 @@ public class AsanaApiBridge {
             try {
                 callback.onResult(new AsanaResponse(responseData));
             } catch (AsanaResponse.MalformedResponseException e) {
-                e.printStackTrace();
                 callback.onError(e);
             }
         } catch (IOException e) {

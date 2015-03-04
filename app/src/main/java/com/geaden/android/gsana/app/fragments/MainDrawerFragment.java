@@ -18,10 +18,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.geaden.android.gsana.app.adapters.GsanaProjectsAdapter;
 import com.geaden.android.gsana.app.LoadersColumns;
@@ -88,8 +86,7 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
                 if (null != cursor) {
                     SELECTED_WORKSPACE_ID = cursor.getLong(LoadersColumns.COL_WORKSPACE_ID);
                 }
-                Toast.makeText(getActivity(),
-                        "Selected workspace " + SELECTED_WORKSPACE_ID, Toast.LENGTH_SHORT).show();
+
                 ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(
                         cursor.getString(LoadersColumns.COL_WORKSPACE_NAME));
                 getLoaderManager().restartLoader(ASANA_PROJECTS_LOADER, null, MainDrawerFragment.this);
@@ -162,7 +159,6 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
                 );
                 break;
             case ASANA_USER_LOADER:
-                // TODO: Store current user id in preferences
                 cursorLoader = new CursorLoader(
                         getActivity(),
                         GsanaContract.UserEntry.CONTENT_URI,
@@ -204,8 +200,8 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
                         Bitmap userPic = BitmapFactory.decodeByteArray(blob, 0, blob.length);
                         mGsanaUserVH.userPicImageView.setImageBitmap(userPic);
                     }
-                    // Get user name
-                    MainActivity.sCurrentUser = currentUserName.split(" ")[0];
+                    // Get user name and notify activity
+                    ((MainActivity) getActivity()).notifyUserInfo(currentUserName.split(" ")[0]);
                 }
                 break;
             default:

@@ -109,8 +109,6 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
 
         mGreetingTextView = (TextView) rootView.findViewById(R.id.greeting);
 
-        updateGreetingsTextView();
-
         mTasksForToday = (TextView) rootView.findViewById(R.id.today_tasks);
 
         mTaskListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -143,13 +141,13 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     /**
      * Updates greetings text
      */
-    private void updateGreetingsTextView() {
+    public void updateGreetingsTextView(String userInfo) {
         if (mGreetingTextView == null) {
             return;
         }
         String greetingTemplate = getString(R.string.greeting_template);
         mGreetingTextView.setText(String.format(greetingTemplate, Utility.getTimeOfTheDay(),
-                MainActivity.sCurrentUser));
+                userInfo));
     }
 
     @Override
@@ -215,6 +213,8 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
             mTaskListView.smoothScrollToPosition(mPosition);
         }
     }
+
+
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {

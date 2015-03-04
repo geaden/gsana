@@ -1,13 +1,18 @@
 package com.geaden.android.gsana.app;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.SwitchPreference;
 import android.support.v7.app.ActionBarActivity;
 
 import com.geaden.android.gsana.app.data.GsanaContract;
@@ -35,11 +40,19 @@ public class SettingsActivity extends ActionBarActivity {
                 .commit();
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    @Override
+    public Intent getParentActivityIntent() {
+        return super.getParentActivityIntent().addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    }
+
     public static class SettingsFragment extends PreferenceFragment implements
             Preference.OnPreferenceChangeListener {
         // since we use the preference change initially to populate the summary
         // field, we'll ignore that change at start of the activity
         boolean mBindingPreference;
+
+        Preference mTogglKeyPref;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -48,10 +61,11 @@ public class SettingsActivity extends ActionBarActivity {
             // Add 'general' preferences, defined in the XML file
             addPreferencesFromResource(R.xml.pref_general);
 
+            mTogglKeyPref = findPreference(getString(R.string.pref_toggl_api_key));
             // For all preferences, attach an OnPreferenceChangeListener so the UI summary can be
             // updated when the preference changes.
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_toggl_enable)));
             bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_toggl_api_key)));
-//            bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_units_key)));
             mBindingPreference = true;
         }
 
@@ -69,10 +83,18 @@ public class SettingsActivity extends ActionBarActivity {
 
             // Trigger the listener immediately with the preference's
             // current value.
-            onPreferenceChange(preference,
-                    PreferenceManager
-                            .getDefaultSharedPreferences(preference.getContext())
-                            .getString(preference.getKey(), ""));
+            if (preference instanceof SwitchPreference) {
+                onPreferenceChange(preference,
+                        PreferenceManager
+                                .getDefaultSharedPreferences(preference.getContext())
+                                .getBoolean(preference.getKey(), false));
+            } else {
+                onPreferenceChange(preference,
+                        PreferenceManager
+                                .getDefaultSharedPreferences(preference.getContext())
+                                .getString(preference.getKey(), ""));
+            }
+
             mBindingPreference = false;
         }
 
@@ -96,6 +118,15 @@ public class SettingsActivity extends ActionBarActivity {
                 if (prefIndex >= 0) {
                     preference.setSummary(listPreference.getEntries()[prefIndex]);
                 }
+            } else if (preference instanceof SwitchPreference) {
+                SwitchPreference switchPreference = (SwitchPreference) preference;
+                boolean switched = Boolean.parseBoolean(value.toString());
+                if (switched) {
+                    preference.setSummary(getString(R.string.pref_toggle_enabled_summary));
+                } else {
+                    preference.setSummary(getString(R.string.pref_toggle_disabled_summary));
+                }
+                mTogglKeyPref.setEnabled(switched);
             } else if (preference instanceof EditTextPreference) {
                 // TODO: set summary
             } else {

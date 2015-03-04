@@ -37,6 +37,17 @@ public class Utility {
     }
 
     /**
+     * Gets boolean value of preference
+     * @param context the activity context
+     * @param key the key to get preference value for
+     * @return preference value
+     */
+    public static boolean getBooleanPreference(Context context, String key) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(key, false);
+    }
+
+    /**
      * Gets access token from preferences
      * @param context context to get preferences for
      * @return access token for Asana API
@@ -150,5 +161,20 @@ public class Utility {
             e.printStackTrace();
         }
         return formattedDate;
+    }
+
+    /**
+     * Gets timer formatted text, based on duration
+     * @param duration the duration of timer
+     * @return formatted text
+     */
+    public static String getTimerFormatted(long duration) {
+        int h = (int) duration / 3600;
+        int m = (int)(duration - h * 3600000) / 60000;
+        int s = (int) (duration - h * 3600000 - m * 60000) / 1000;
+        String hh = h < 10 ? "0" + h : h + "";
+        String mm = m < 10 ? "0" + m : m + "";
+        String ss = s < 10 ? "0" + s : s + "";
+        return String.format("%s:%s:%s", hh, mm, ss);
     }
 }
