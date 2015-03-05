@@ -40,12 +40,8 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     private ListView mTaskListView;
     private int mPosition = ListView.INVALID_POSITION;
 
-    private String mCurrentWorkspace = "";
-
     private TextView mTasksForToday;
     private TextView mGreetingTextView;
-
-    private ToggleButton mStartTimerButton;
 
     private static final String SELECTED_KEY = "selected_position";
 
@@ -123,6 +119,7 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
                             .onItemSelected(cursor.getString(LoadersColumns.COL_TASK_ID));
                 }
                 mPosition = position;
+                setActivatedPosition(mPosition);
             }
         });
         // If there's instance state, mine it for useful information.
@@ -134,6 +131,7 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
             // The listview probably hasn't even been populated yet.  Actually perform the
             // swapout in onLoadFinished.
             mPosition = savedInstanceState.getInt(SELECTED_KEY);
+            setActivatedPosition(mPosition);
         }
         return rootView;
     }
@@ -212,6 +210,17 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
             // to, do so now.
             mTaskListView.smoothScrollToPosition(mPosition);
         }
+    }
+
+
+    private void setActivatedPosition(int position) {
+        if (position == ListView.INVALID_POSITION) {
+            mTaskListView.setItemChecked(mPosition, false);
+        } else {
+            mTaskListView.setItemChecked(position, true);
+        }
+
+        mPosition = position;
     }
 
 

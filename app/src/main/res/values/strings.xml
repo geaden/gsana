@@ -42,5 +42,6 @@
     <string name="pref_toggle_enabled_summary">Toggl integration enabled</string>
     <string name="pref_toggle_disabled_summary">Toggl integration disabled</string>
     <string name="msg_enter_valid_toggl_key">Enter Toggl Key. Checkout settings</string>
+    <string name="failed_to_refresh_token">Failed to refresh token</string>
 
 </resources>

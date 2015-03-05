@@ -5,4 +5,11 @@
         <item name="actionBarStyle">@style/ActionBar.Solid.Gsana</item>
     </style>
 
+
+    <!-- Style for task listview -->
+    <style name="TasksListViewStyle">
+        <!-- Here it's a stub.  In screens of sufficient width, this style includes modifications
+        for two-pane layout -->
+    </style>
+
 </resources>

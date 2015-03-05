@@ -56,7 +56,7 @@ public class AsanaApi2 {
      */
     public void me(final AsanaCallback<AsanaUser> callback) {
         Log.i(LOG_TAG, "Requesting user info");
-        mAsanaApiBridge.request(AsanaApiBridge.GET, "/users/me", null, new AsanaCallback<AsanaResponse>() {
+        mAsanaApiBridge.request(HttpHelper.Method.GET, "/users/me", null, new AsanaCallback<AsanaResponse>() {
             @Override
             public void onResult(AsanaResponse response) {
                 JSONObject data = (JSONObject) response.getData();
@@ -104,7 +104,7 @@ public class AsanaApi2 {
      */
     public void tasks(AsanaWorkspace workspace, final AsanaCallback<List<AsanaTask>> callback) {
         Log.i(LOG_TAG, "Requesting tasks for workspace " + workspace.getId());
-        mAsanaApiBridge.request(AsanaApiBridge.GET,
+        mAsanaApiBridge.request(HttpHelper.Method.GET,
                 "/tasks?workspace=" + workspace.getId() + "&assignee=me",
                 null, new AsanaCallback<AsanaResponse>() {
                     @Override
@@ -136,7 +136,7 @@ public class AsanaApi2 {
      */
     public void getTaskDetail(AsanaTask asanaTask, final AsanaCallback<AsanaTask> callback) {
         Log.i(LOG_TAG, "Getting task details " + asanaTask.getId());
-        mAsanaApiBridge.request(AsanaApiBridge.GET, "/tasks/" + asanaTask.getId(),
+        mAsanaApiBridge.request(HttpHelper.Method.GET, "/tasks/" + asanaTask.getId(),
                 null, new AsanaCallback<AsanaResponse>() {
                     @Override
                     public void onResult(AsanaResponse value) {
@@ -159,7 +159,7 @@ public class AsanaApi2 {
     public void workspaces(final AsanaCallback<List<AsanaWorkspace>> callback) {
         // retrieve workspaces
         Log.i(LOG_TAG, "Requesting workspaces");
-        mAsanaApiBridge.request(AsanaApiBridge.GET, "/workspaces", null, new AsanaCallback<AsanaResponse>() {
+        mAsanaApiBridge.request(HttpHelper.Method.GET, "/workspaces", null, new AsanaCallback<AsanaResponse>() {
             @Override
             public void onResult(AsanaResponse response) {
                 JSONArray data = (JSONArray) response.getData();
@@ -188,7 +188,7 @@ public class AsanaApi2 {
      * @param callback Callback on result or on error
      */
     public void users(AsanaWorkspace workspace, final AsanaCallback<List<AsanaUser>> callback) {
-        mAsanaApiBridge.request(AsanaApiBridge.GET, "/workspaces/" + workspace.getId() + "/users",
+        mAsanaApiBridge.request(HttpHelper.Method.GET, "/workspaces/" + workspace.getId() + "/users",
                 null, new AsanaCallback<AsanaResponse>() {
                     @Override
                     public void onResult(AsanaResponse response) {
@@ -218,7 +218,7 @@ public class AsanaApi2 {
     public void projects(AsanaWorkspace workspace, final AsanaCallback<List<AsanaProject>> callback) {
         // retrieve projects
         Log.i(LOG_TAG, "Requesting projects for worspace " + workspace.getId());
-        mAsanaApiBridge.request(AsanaApiBridge.GET, "/workspaces/" + workspace.getId() + "/projects",
+        mAsanaApiBridge.request(HttpHelper.Method.GET, "/workspaces/" + workspace.getId() + "/projects",
                 null, new AsanaCallback<AsanaResponse>() {
                     @Override
                     public void onResult(AsanaResponse response) {
@@ -250,7 +250,7 @@ public class AsanaApi2 {
      */
     public void getProjectDetails(final AsanaProject project, final AsanaCallback<AsanaProject> callback) {
         Log.i(LOG_TAG, "Requesting project details " + project.getId());
-        mAsanaApiBridge.request(AsanaApiBridge.GET, "/projects/" + project.getId(),
+        mAsanaApiBridge.request(HttpHelper.Method.GET, "/projects/" + project.getId(),
                 null, new AsanaCallback<AsanaResponse>() {
                     @Override
                     public void onResult(AsanaResponse response) {

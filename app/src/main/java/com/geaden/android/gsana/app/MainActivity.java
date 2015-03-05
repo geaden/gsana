@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.fragments.MainDrawerFragment;
@@ -168,7 +169,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
         } else if (id == R.id.action_logout) {
             // Remove access token. If logout chosen.
             Utility.invalidateAccessToken(this);
-            startActivity(getIntent());
+            startActivity(new Intent(this, LoginActivity.class));
             return true;
         } else if (id == R.id.action_sync) {
             // Sync immediately

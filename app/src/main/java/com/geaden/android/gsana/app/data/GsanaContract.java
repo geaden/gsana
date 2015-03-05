@@ -156,6 +156,9 @@ public class GsanaContract {
         // Task Toggl Start
         public static final String COLUMN_TOGGL_START_DATE = "toggl_start_date";
 
+        // Task Toggl duration
+        public static final String COLUMN_TOGGL_DURATION = "toggl_duration";
+
         // Task Toggl Start
         public static final String COLUMN_TOGGL_END_DATE = "toggl_end_date";
 

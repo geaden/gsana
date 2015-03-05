@@ -1,9 +1,13 @@
 package com.geaden.android.gsana.app.api;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.geaden.android.gsana.app.MainActivity;
+import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.oauth.AsanaOAuthClient;
 
@@ -27,17 +31,12 @@ public class AsanaApiBridge {
     private Context mContext;
     private AsanaOAuthClient mAsanaOAuthClient;
 
-    // HTTP Methods
-    public static final String GET = "GET";
-    public static final String POST = "POST";
-    public static final String PUT = "PUT";
+    // Maximum allowed retries
+    private final int MAX_ALLOWED_RETRIES = 5;
 
-    // HTTP Responses
-    public static final int OK = 200;
-    public static final int BAD_REQUEST = 400;
-    public static final int UNAUTHORIZED = 401;
-    public static final int ACCESS_DENIED = 403;
-    public static final int METHOD_NOT_ALLOWED = 405;
+
+    // Current retry count
+    private int mRetryCount = 0;
 
     private static AsanaApiBridge instance = null;
 
@@ -144,11 +143,21 @@ public class AsanaApiBridge {
             } else if (serverCode == HttpHelper.ResponseCode.UNAUTHORIZED) {
                 Log.d(LOG_TAG, "Refreshing token and retrying...");
                 String refreshToken = Utility.getRefreshToken(mContext);
+                Log.v(LOG_TAG, "Refresh token: " + refreshToken);
                 AsanaOAuthClient.AsanaTokenResponse tokenResponse = mAsanaOAuthClient.refreshToken(refreshToken);
                 // Update values in shared preferences
                 Utility.putSettingsStringValue(mContext, Utility.ACCESS_TOKEN_KEY, tokenResponse.getAccessToken());
                 Utility.putSettingsStringValue(mContext, Utility.REFRESH_TOKEN_KEY, tokenResponse.getRefreshToken());
-                request(httpMethod, path, params, callback);
+                if (mRetryCount < MAX_ALLOWED_RETRIES) {
+                    request(httpMethod, path, params, callback);
+                    mRetryCount++;
+                } else {
+                    Toast.makeText(mContext.getApplicationContext(),
+                            mContext.getString(R.string.failed_to_refresh_token), Toast.LENGTH_SHORT).show();
+                    // Clear access token and start again
+                    Utility.putAccessToken(mContext, null);
+                    mContext.startActivity(new Intent(mContext, MainActivity.class));
+                }
                 return;
             } else {
                 Log.e(LOG_TAG, "Server returned the following error code: " + serverCode, null);

@@ -18,7 +18,7 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
     private static GsanaDbHelper sInstance;
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 15;
+    private static final int DATABASE_VERSION = 16;
 
     public static final String DATABASE_NAME = "gsana.db";
 
@@ -86,6 +86,7 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
                 TaskEntry.COLUMN_TOGGL_ENTRY_ID + " INTEGER, " +
                 TaskEntry.COLUMN_TOGGL_START_DATE + " TEXT, " +
                 TaskEntry.COLUMN_TOGGL_END_DATE + " TEXT, " +
+                TaskEntry.COLUMN_TOGGL_DURATION + " INTEGER, " +
                 // Associate task with project
                 " FOREIGN KEY (" + TaskEntry.COLUMN_TASK_PROJECT_ID + ") REFERENCES " +
                 ProjectEntry.TABLE_NAME + " (" + ProjectEntry.COLUMN_PROJECT_ID + "), " +
@@ -121,7 +122,6 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + WorkspaceEntry.TABLE_NAME);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + ProjectEntry.TABLE_NAME);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + TaskEntry.TABLE_NAME);
-        Log.v(this.getClass().getSimpleName(), "Upgrading database...");
         onCreate(sqLiteDatabase);
     }
 }

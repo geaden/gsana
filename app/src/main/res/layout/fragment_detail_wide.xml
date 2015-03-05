@@ -64,24 +64,25 @@
             android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <!--Task Description-->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Task Description"
-        android:textColor="@android:color/white"
-        android:autoLink="web|email"
-        android:textColorLink="@color/material_blue_grey_950"
-        android:fontFamily="sans-serif-condensed"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:id="@+id/asana_task_description" />
-
     <!--Toggl integration-->
     <LinearLayout
         android:id="@+id/toggl_timer_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
+        <!--Task Description-->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="Task Description"
+            android:textColor="@android:color/white"
+            android:autoLink="web|email"
+            android:layout_weight="2"
+            android:gravity="center_vertical"
+            android:textColorLink="@color/material_blue_grey_950"
+            android:fontFamily="sans-serif-condensed"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/asana_task_description" />
         <ToggleButton
             android:id="@+id/btn_toggl_start_timer"
             android:background="@drawable/btn_toggl_start"
@@ -95,7 +96,8 @@
             android:gravity="center_vertical"
             android:textColor="@android:color/white"
             android:textSize="18sp"
-            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent" />
     </LinearLayout>
     <!-- Task actions -->
@@ -118,6 +120,7 @@
             android:windowSoftInputMode="stateHidden"
             android:descendantFocusability="beforeDescendants"
             android:focusableInTouchMode="true"
+            android:textColorHint="@android:color/white"
             android:layout_weight="1"/>
         <ImageButton
             android:layout_width="wrap_content"

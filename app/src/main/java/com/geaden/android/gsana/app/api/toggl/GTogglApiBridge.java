@@ -149,9 +149,11 @@ public class GTogglApiBridge {
                 Log.v(LOG_TAG, "Response: " + responseData);
             } else if (serverCode == HttpHelper.ResponseCode.UNAUTHORIZED) {
                 callback.onError(new Throwable("Unauthorized"));
+                return;
             } else {
                 Log.e(LOG_TAG, "Server returned the following error code: " + serverCode, null);
                 callback.onError(new Exception("Server returned the following error code: " + serverCode));
+                return;
             }
             callback.onResult(new GTogglResponse(responseData));
         } catch (IOException e) {

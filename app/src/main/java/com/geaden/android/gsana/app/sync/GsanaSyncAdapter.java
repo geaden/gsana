@@ -298,7 +298,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
 
                     asanaApi.tasks(asanaWorkspace, new AsanaCallback<List<AsanaTask>>() {
                         @Override
-                        public void onResult(List<AsanaTask> asanaTasks) {
+                        public void onResult(final List<AsanaTask> asanaTasks) {
                             for (final AsanaTask asanaTask : asanaTasks) {
                                 asanaApi.getTaskDetail(asanaTask, new AsanaCallback<AsanaTask>() {
                                     @Override
@@ -308,6 +308,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
                                         asanaTask.setAssigneeStatus(value.getAssigneeStatus());
                                         asanaTask.setCompleted(value.getCompleted());
                                         asanaTask.setDueOn(value.getDueOn());
+                                        asanaTask.setProjects(value.getProjects());
                                         asanaTask.setWorkspace(value.getWorkspace());
                                     }
 

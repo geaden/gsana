@@ -38,6 +38,7 @@ public class LoadersColumns {
             GsanaContract.TaskEntry.COLUMN_TOGGL_START_DATE,
             GsanaContract.TaskEntry.COLUMN_TOGGL_END_DATE,
             GsanaContract.ProjectEntry.TABLE_NAME + "." + GsanaContract.ProjectEntry.COLUMN_PROJECT_NAME,
+            GsanaContract.TaskEntry.COLUMN_TOGGL_DURATION
     };
 
     // The indices that correspond to ASANA_TASK_COLUMNS
@@ -59,6 +60,7 @@ public class LoadersColumns {
     public static final int COL_TASK_TOGGL_START_DATE = 16;
     public static final int COL_TASK_TOGGL_END_DATE = 17;
     public static final int COL_TASK_PROJECT_NAME = 18;
+    public static final int COL_TASK_TOGGL_DURATION = 19;
 
     // Specify the order of columns for projects
     public static final String[] ASANA_PROJECTS_COLUMNS = {

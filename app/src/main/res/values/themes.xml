@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Gsana main theme -->
     <style name="GsanaTheme" parent="@style/AppTheme">
         <item name="actionBarStyle">@style/ActionBar.Solid.Gsana</item>
     </style>
 
-
+    <!-- Gsana action bar -->
     <style name="ActionBar.Solid.Gsana" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
         <item name="background">@color/gsana_background_color</item>
-    </style>
-
-    <!-- Style for task listview -->
-    <style name="TasksListViewStyle">
-        <!-- Here it's a stub.  In screens of sufficient width, this style includes modifications
-        for two-pane layout -->
     </style>
 </resources>

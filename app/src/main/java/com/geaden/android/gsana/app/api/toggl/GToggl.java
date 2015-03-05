@@ -177,6 +177,7 @@ public class GToggl {
      * @return created {@link TimeEntry}
      */
     public TimeEntry startTimeEntry(final TimeEntry timeEntry) {
+        Log.d(LOG_TAG, "Start time entry");
         mTogglApiBridge.request(HttpHelper.Method.POST, TIME_ENTRY_START, timeEntry.toJSONString(),
                 new GTogglApiBridge.GTogglCallback<GTogglApiBridge.GTogglResponse>() {
             @Override
@@ -208,6 +209,7 @@ public class GToggl {
      * @return the stopped {@link TimeEntry}
      */
     public TimeEntry stopTimeEntry(final TimeEntry timeEntry) {
+        Log.d(LOG_TAG, "Stop time entry");
         mTogglApiBridge.request(HttpHelper.Method.PUT, TIME_ENTRY_STOP.replace(PLACEHOLDER, timeEntry.getId().toString()),
                 null, new GTogglApiBridge.GTogglCallback<GTogglApiBridge.GTogglResponse>() {
                     @Override
@@ -236,6 +238,7 @@ public class GToggl {
      * @return created {@link TimeEntry}
      */
     public TimeEntry updateTimeEntry(final TimeEntry timeEntry) {
+        Log.d(LOG_TAG, "Update time entry");
         mTogglApiBridge.request(HttpHelper.Method.PUT, TIME_ENTRY.replace(PLACEHOLDER, timeEntry.getId().toString()),
                 timeEntry.toJSONString(), new GTogglApiBridge.GTogglCallback<GTogglApiBridge.GTogglResponse>() {
                     @Override

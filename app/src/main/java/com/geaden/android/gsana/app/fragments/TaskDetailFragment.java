@@ -54,6 +54,7 @@ import java.util.Date;
  * Task detail fragment.
  */
 public class TaskDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+    private static final String TASK_TIMER_RUNNING = "task_timer_running";
     private final String LOG_TAG = TaskDetailFragment.class.getSimpleName();
 
     /** Loaders **/
@@ -68,6 +69,8 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
     private ShareActionProvider mShareActionProvider;
 
     private static final String GSANA_SHARE_HASHTAG = " #YetAnotherAndroidClientForAsana";
+
+    private String mTaskDuration;
 
     private String mTaskId;
     private String mShareTask;
@@ -89,6 +92,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
     private ToggleButton mTaskTimerToggeButton;
     private Chronometer mTaskTimer;
     private TextView mTaskProject;
+    private boolean mTaskTimerRunning;
 
 
     public TaskDetailFragment() {
@@ -98,6 +102,8 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putString(TaskDetailActivity.TASK_KEY, mTaskId);
+        // Save state of our timer
+        outState.putBoolean(TASK_TIMER_RUNNING, mTaskTimerRunning);
         super.onSaveInstanceState(outState);
     }
 
@@ -150,14 +156,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         mTogglEnabled = Utility.getBooleanPreference(getActivity(), getString(R.string.pref_toggl_enable));
         mTogglApiKey = Utility.getPreference(getActivity(), getActivity().getResources().getString(R.string.pref_toggl_api_key));
-        mTogglKeyValid = mTogglApiKey != null || mTogglApiKey.length() >= 32;
-        if (!mTogglEnabled || !mTogglKeyValid) {
-            rootView.findViewById(R.id.toggl_timer_section).setVisibility(View.GONE);
-        }
-
-        if (mTogglEnabled && !mTogglKeyValid) {
-            Toast.makeText(getActivity(), getString(R.string.msg_enter_valid_toggl_key), Toast.LENGTH_SHORT).show();
-        }
+        mTogglKeyValid = mTogglApiKey != null && mTogglApiKey.length() >= 32;
 
         mAssigneeTextView = (TextView) rootView.findViewById(R.id.asana_task_assignee);
         mAssigneeImageView = (ImageView) rootView.findViewById(R.id.asana_task_assignee_photo);
@@ -168,6 +167,15 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         mTaskTimer = (Chronometer) rootView.findViewById(R.id.chrono_toggl_timer);
         mTaskProject = (TextView) rootView.findViewById(R.id.asana_task_detail_project);
 
+        if (!mTogglEnabled) {
+            rootView.findViewById(R.id.toggl_timer_section).setVisibility(View.GONE);
+        }
+
+        if (mTogglEnabled && !mTogglKeyValid) {
+            Toast.makeText(getActivity(), getString(R.string.msg_enter_valid_toggl_key), Toast.LENGTH_SHORT).show();
+            mTaskTimerToggeButton.setEnabled(false);
+        }
+
         return rootView;
     }
 
@@ -176,6 +184,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
             mTaskId = savedInstanceState.getString(TaskDetailActivity.TASK_KEY);
+            mTaskTimerRunning = savedInstanceState.getBoolean(TASK_TIMER_RUNNING);
         }
 
         Bundle arguments = getArguments();
@@ -240,7 +249,12 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                     mTaskProject.setText(taskProject);
 
                     // Share intent task string
-                    mShareTask = String.format("%s - %s - %s ", taskName, taskCompleted, taskNotes);
+                    mShareTask = String.format("%s - %s - %s", taskName,
+                            taskCompleted, taskNotes, mTaskDuration);
+
+                    if (mTaskDuration != null) {
+                        mShareTask += "#duration " + mTaskDuration;
+                    }
 
                     // If onCreateOptionsMenu has already happened, we need to update the share intent now.
                     if (mShareActionProvider != null) {
@@ -248,24 +262,14 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                     }
 
                     if (mTogglEnabled && mTogglKeyValid) {
-                        final String startDate = data.getString(LoadersColumns.COL_TASK_TOGGL_START_DATE);
-                        final String endDate = data.getString(LoadersColumns.COL_TASK_TOGGL_END_DATE);
-                        //TODO: restore timer state
-                        if (startDate != null) {
-                            Date start = DateUtil.convertStringToDate(startDate);
-                            // Date that timer is started from
-                            if (!mTaskTimer.isActivated()) {
-                                mTaskTimer.setBase(SystemClock.elapsedRealtime() - start.getTime());
-//                                if (endDate == null) {
-//                                    // Timer is in progress
-//                                    if (!mTaskTimerToggeButton.isChecked()) mTaskTimerToggeButton.setChecked(true);
-//                                } else {
-//                                    if (mTaskTimerToggeButton.isChecked()) mTaskTimerToggeButton.setChecked(false);
-//
-//                                }
-                            }
-
-//                            mTaskTimer.setText(Utility.getTimerFormatted(duration));
+                        long duration = data.getLong(LoadersColumns.COL_TASK_TOGGL_DURATION);
+                        if (duration > 0) {
+                            // Already running
+                            mTaskTimer.start();
+                            mTaskTimer.setBase(duration);
+                            mTaskTimer.setText(Utility.getTimerFormatted(duration));
+                            mTaskTimerToggeButton.setChecked(true);
+                            mTaskTimerRunning = true;
                         }
                         mTaskTimerToggeButton.setOnCheckedChangeListener(new ToggleButton.OnCheckedChangeListener() {
                             @Override
@@ -275,18 +279,11 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                                                 isChecked ? "Starting" : "Stopping"),
                                         Toast.LENGTH_SHORT).show();
                                 if (isChecked) {
-                                    Date start = new Date();
-                                    if (endDate != null) {
-                                        start = DateUtil.convertStringToDate(endDate);
-                                    } else if (startDate != null) {
-                                        start = DateUtil.convertStringToDate(startDate);
-                                    } else {
-                                        start = new Date();
-                                    }
-                                    mTaskTimer.setBase(SystemClock.elapsedRealtime() - start.getTime());
-                                    mTaskTimer.start();
+                                    if (!mTaskTimerRunning) mTaskTimer.start();
+                                    mTaskTimerRunning = true;
                                 } else {
                                     mTaskTimer.stop();
+                                    mTaskTimerRunning = false;
                                 }
                                 TimeEntryAsyncTask timeEntryAsyncTask = new TimeEntryAsyncTask();
                                 timeEntryAsyncTask.execute(
@@ -325,7 +322,15 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         Bundle arguments = getArguments();
         if (arguments != null && arguments.containsKey(TaskDetailActivity.TASK_KEY)) {
             getLoaderManager().restartLoader(TASK_DETAIL_LOADER, null, this);
+            if (arguments.containsKey(TASK_TIMER_RUNNING)) {
+                mTaskTimerRunning = arguments.getBoolean(TASK_TIMER_RUNNING);
+            }
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
     }
 
     /**
@@ -341,11 +346,18 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             TimeEntry timeEntry = new TimeEntry();
             Long tEntryId = cursor.getLong(LoadersColumns.COL_TASK_TOGGL_ENTRY_ID);
             timeEntry.setDescription(cursor.getString(LoadersColumns.COL_TASK_NAME));
+            timeEntry.setDuration(cursor.getLong(LoadersColumns.COL_TASK_TOGGL_DURATION));
             if (tEntryId > 0) {
                 timeEntry.setId(tEntryId);
-                timeEntry.setStart(new Date());
-                timeEntry.setStop(new Date());
-                timeEntry = gToggl.updateTimeEntry(timeEntry);
+                if (timeEntry.getDuration() < 0) {
+                    // Already running. Stop it.
+                    timeEntry = gToggl.stopTimeEntry(timeEntry);
+                    mTaskDuration = Utility.getTimerFormatted(timeEntry.getDuration());
+                    Log.v(LOG_TAG, "Spent " + mTaskDuration);
+                } else {
+                    timeEntry.setStart(new Date());
+                    timeEntry = gToggl.startTimeEntry(timeEntry);
+                }
             } else {
                 timeEntry = gToggl.startTimeEntry(timeEntry);
             }
@@ -354,6 +366,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             if (timeEntry.getStop() != null) {
                 cv.put(GsanaContract.TaskEntry.COLUMN_TOGGL_END_DATE, DateUtil.convertDateToString(timeEntry.getStop()));
             }
+            cv.put(TaskEntry.COLUMN_TOGGL_DURATION, timeEntry.getDuration());
             cv.put(GsanaContract.TaskEntry.COLUMN_TOGGL_ENTRY_ID, timeEntry.getId());
             getActivity().getContentResolver().update(GsanaContract.TaskEntry.buildTaskUri(
                             cursor.getLong(LoadersColumns.COL_TASK_ID)),
@@ -363,7 +376,6 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                             .setSmallIcon(R.drawable.ic_toggl_notification)
                             .setContentTitle(timeEntry.getDescription())
                             .setUsesChronometer(true)
-                            .setWhen(SystemClock.elapsedRealtime() - timeEntry.getStart().getTime())
                             .setShowWhen(true)
                             .setContentText(getString(R.string.app_name));
 
@@ -377,6 +389,8 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             // This ensures that navigating backward from the Activity leads out of
             // your application to the Home screen.
             TaskStackBuilder stackBuilder = TaskStackBuilder.create(getActivity());
+            // Adds the back stack
+//            stackBuilder.addParentStack(TaskDetailActivity.class);
             stackBuilder.addNextIntent(resultIntent);
             PendingIntent resultPendingIntent =
                     stackBuilder.getPendingIntent(
@@ -389,11 +403,12 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                     (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
             // TASK_NOTIFICATION_ID allows you to update the notification later on.
             if (started) {
+                Log.v(LOG_TAG, "Show notification");
                 mNotificationManager.notify(TASK_NOTIFICATION_ID, mBuilder.build());
             } else {
+                Log.v(LOG_TAG, "Hide notification");
                 mNotificationManager.cancel(TASK_NOTIFICATION_ID);
             }
-
             return null;
         }
     }
