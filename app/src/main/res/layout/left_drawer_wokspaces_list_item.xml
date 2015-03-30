@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:text="zzz"
+    tools:text="Workspace 1"
     android:gravity="center_vertical"
-    android:layout_marginLeft="@dimen/drawer_workspaces_list_margin"
+    android:paddingLeft="@dimen/drawer_workspaces_list_margin"
     android:layout_height="@dimen/drawer_workspaces_list_item_height"
-    android:id="@+id/left_drawer_workspaces_list_workspace_name"/>
+    android:id="@+id/left_drawer_workspaces_list_workspace_name" />

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_main_layout"
     android:layout_marginTop="@dimen/activity_vertical_margin"
     android:background="@android:color/white"
@@ -17,6 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/nopicture"
+            android:scaleType="centerCrop"
             android:id="@+id/left_drawer_user_pic"/>
 
         <!-- User name -->
@@ -24,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/left_drawer_user_name"
-            android:text="Foo Bar"
+            tools:text="Foo Bar"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:gravity="center_vertical"
             android:dividerHeight="0dp"
@@ -35,7 +37,7 @@
 
     <!-- List of Workspaces -->
     <TextView
-        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:paddingLeft="@dimen/activity_horizontal_padding"
         android:id="@+id/drawer_workspaces_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -46,11 +48,13 @@
     <ListView android:id="@+id/left_drawer_workspaces_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        tools:items="3"
+        tools:listitem="@layout/left_drawer_wokspaces_list_item"
         android:choiceMode="singleChoice" />
 
     <!-- List of Projects -->
     <TextView
-        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:paddingLeft="@dimen/activity_horizontal_padding"
         android:id="@+id/drawer_projects_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -61,6 +65,7 @@
     <ListView android:id="@+id/left_drawer_projects_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        tools:listitem="@layout/list_asana_project_item"
         android:choiceMode="singleChoice"
         android:divider="@color/gray" />
 

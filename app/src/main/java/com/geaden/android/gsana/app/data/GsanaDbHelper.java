@@ -18,7 +18,7 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
     private static GsanaDbHelper sInstance;
 
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 16;
+    private static final int DATABASE_VERSION = 17;
 
     public static final String DATABASE_NAME = "gsana.db";
 
@@ -53,11 +53,11 @@ public class GsanaDbHelper extends SQLiteOpenHelper {
         final String SQL_CREATE_PROJECT_TABLE = "CREATE TABLE " + ProjectEntry.TABLE_NAME + " (" +
                 ProjectEntry._ID + " INTEGER PRIMARY KEY, " +
                 ProjectEntry.COLUMN_PROJECT_ID + " INTEGER UNIQUE NOT NULL, " +
-                ProjectEntry.COLUMN_PROJECT_WORKSPACE_ID + " INTEGER NOT NULL, " +
-                ProjectEntry.COLUMN_PROJECT_CREATED_AT + " TEXT NOT NULL, " +
+                ProjectEntry.COLUMN_PROJECT_WORKSPACE_ID + " INTEGER, " +
+                ProjectEntry.COLUMN_PROJECT_CREATED_AT + " TEXT, " +
                 // 0 - false, 1 - true
-                ProjectEntry.COLUMN_PROJECT_ARCHIVED + " INTEGER NOT NULL, " +
-                ProjectEntry.COLUMN_PROJECT_COLOR + " TEXT NOT NULL, " +
+                ProjectEntry.COLUMN_PROJECT_ARCHIVED + " INTEGER, " +
+                ProjectEntry.COLUMN_PROJECT_COLOR + " TEXT, " +
                 ProjectEntry.COLUMN_PROJECT_NAME + " TEXT NOT NULL, " +
                 ProjectEntry.COLUMN_PROJECT_NOTES + " TEXT, " +
                 ProjectEntry.COLUMN_PROJECT_MODIFIED_AT + " TEXT, " +

@@ -33,14 +33,15 @@ public abstract class Model {
     }
 
     /**
-     * Gets Long value from data as {@link JSONObject} by value
+     * Gets Long value from data as {@link JSONObject} by value. If returning value is 0, than
+     * it's not fully retrieved from API.
      * @param data json representation of data
      * @param key the key to get value for
      * @return value
      */
-    public Long getLongValue(JSONObject data, String key) {
+    public long getLongValue(JSONObject data, String key) {
         if (data == null) {
-            return null;
+            return 0;
         }
         if (data.has(key)) {
             try {
@@ -49,7 +50,7 @@ public abstract class Model {
                 Log.e(LOG_TAG, "Error to get value for " + key);
             }
         }
-        return null;
+        return 0;
     }
 
     /**

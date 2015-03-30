@@ -105,18 +105,11 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
      * Performs projects insertion
      * @param projects list of projects to insert
      */
-    private void performaProjectsInsert(List<AsanaProject> projects) {
+    private void performProjectsInsertion(List<AsanaProject> projects) {
         Log.d(LOG_TAG, "Performing Projects Insertion");
         Vector<ContentValues> cVVector = new Vector<ContentValues>(projects.size());
         for (AsanaProject project : projects) {
-            ContentValues values = new ContentValues();
-            values.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_ID, project.getId());
-            values.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_CREATED_AT, project.getCreatedAt());
-            values.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_COLOR, project.getColor());
-            values.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_WORKSPACE_ID, project.getWorkspace().getId());
-            values.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_ARCHIVED, project.getArchived());
-            values.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_NAME, project.getName());
-            values.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_MODIFIED_AT, project.getModifiedAt());
+            ContentValues values = getProjectValues(project);
             cVVector.add(values);
         }
         insertOrUpdate(GsanaContract.ProjectEntry.CONTENT_URI, cVVector);
@@ -153,27 +146,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
         // Get and insert the new tasks information into the database
         Vector<ContentValues> cVVector = new Vector<ContentValues>(asanaTasks.size());
         for (AsanaTask task : asanaTasks) {
-            ContentValues taskValues = new ContentValues();
-
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ID, task.getId());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_CREATED_AT, task.getCreatedAt());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_WORKSPACE_ID, task.getWorkspace().getId());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_STATUS, task.getAssigneeStatus());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED, task.getCompleted());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_NAME, task.getName());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_DUE_ON, task.getDueOn());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_NOTES, task.getNotes());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED_AT, task.getCompletedAt());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_MODIFIED_AT, task.getModifiedAt());
-            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_ID,
-                    task.getAssignee() != null ? task.getAssignee().getId() : null);
-
-
-            if (task.getProjects().size() > 0) {
-                // Probably not a good way, but so far ok
-                taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_PROJECT_ID, task.getProjects().get(0).getId());
-            }
-
+            ContentValues taskValues = getTaskValues(task);
             cVVector.add(taskValues);
         }
         insertOrUpdate(GsanaContract.TaskEntry.CONTENT_URI, cVVector);
@@ -237,8 +210,6 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle bundle, String authority,
                               ContentProviderClient contentProviderClient, SyncResult syncResult) {
-        // Getting the access token to send to the Api
-        String accessToken = Utility.getAccessToken(mContext);
 
         // Get instance AsanaApiClient
         final AsanaApi2 asanaApi = AsanaApi2.getInstance(mContext);
@@ -268,11 +239,56 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
             public void onResult(List<AsanaWorkspace> workspaces) {
                 Log.d(LOG_TAG, "Retrieved workspaces");
                 performWorkspacesInsert(workspaces);
+
                 for (AsanaWorkspace asanaWorkspace : workspaces) {
                     asanaApi.projects(asanaWorkspace, new AsanaCallback<List<AsanaProject>>() {
+
                         @Override
                         public void onResult(List<AsanaProject> asanaProjects) {
+                            // Immediately insert project data to the database
+                            performProjectsInsertion(asanaProjects);
+
                             for (final AsanaProject asanaProject : asanaProjects) {
+
+                                asanaApi.projectTasks(asanaProject, new AsanaCallback<List<AsanaTask>>() {
+
+                                    @Override
+                                    public void onResult(List<AsanaTask> tasks) {
+                                        // Immediately insert tasks that belong to the project
+                                        performTasksInsertion(tasks);
+
+                                        for (final AsanaTask asanaTask : tasks) {
+                                            asanaApi.getTaskDetail(asanaTask, new AsanaCallback<AsanaTask>() {
+
+                                                @Override
+                                                public void onResult(AsanaTask value) {
+                                                    asanaTask.setAssigneeId(value.getAssignee());
+                                                    asanaTask.setNotes(value.getNotes());
+                                                    asanaTask.setAssigneeStatus(value.getAssigneeStatus());
+                                                    asanaTask.setCompleted(value.getCompleted());
+                                                    asanaTask.setDueOn(value.getDueOn());
+                                                    asanaTask.setProjects(value.getProjects());
+                                                    asanaTask.setWorkspace(value.getWorkspace());
+                                                    // Update task data in local DB
+                                                    performTaskUpdate(asanaTask);
+                                                }
+
+                                                @Override
+                                                public void onError(Throwable exception) {
+                                                    Log.d(LOG_TAG, exception.getMessage());
+                                                }
+                                            });
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onError(Throwable e) {
+                                        Log.e(LOG_TAG, "Error retrieving project tasks "
+                                                + asanaProject.getId(), e);
+                                    }
+                                });
+
+                                // Now one can retrieve the rest of the data
                                 asanaApi.getProjectDetails(asanaProject, new AsanaCallback<AsanaProject>() {
                                     @Override
                                     public void onResult(AsanaProject value) {
@@ -281,51 +297,23 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
                                         asanaProject.setNotes(value.getNotes());
                                         asanaProject.setArchived(value.getArchived());
                                         asanaProject.setCreatedAt(value.getCreatedAt());
+                                        // Update project data
+                                        performProjectUpdate(asanaProject);
+
                                     }
 
                                     @Override
                                     public void onError(Throwable e) {
-                                        Log.d(LOG_TAG, "Error Retrieving project details " + e.getMessage());
+                                        Log.d(LOG_TAG, "Error Retrieving project details " +
+                                                asanaProject.getId(), e);
                                     }
                                 });
                             }
-                            performaProjectsInsert(asanaProjects);
                         }
 
                         @Override
                         public void onError(Throwable e) {
                             Log.d(LOG_TAG, "Error retrieving projects " + e.getMessage());
-                        }
-                    });
-
-                    asanaApi.tasks(asanaWorkspace, new AsanaCallback<List<AsanaTask>>() {
-                        @Override
-                        public void onResult(final List<AsanaTask> asanaTasks) {
-                            for (final AsanaTask asanaTask : asanaTasks) {
-                                asanaApi.getTaskDetail(asanaTask, new AsanaCallback<AsanaTask>() {
-                                    @Override
-                                    public void onResult(AsanaTask value) {
-                                        asanaTask.setAssigneeId(value.getAssignee());
-                                        asanaTask.setNotes(value.getNotes());
-                                        asanaTask.setAssigneeStatus(value.getAssigneeStatus());
-                                        asanaTask.setCompleted(value.getCompleted());
-                                        asanaTask.setDueOn(value.getDueOn());
-                                        asanaTask.setProjects(value.getProjects());
-                                        asanaTask.setWorkspace(value.getWorkspace());
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable exception) {
-                                        Log.d(LOG_TAG, exception.getMessage());
-                                    }
-                                });
-                            }
-                            performTasksInsertion(asanaTasks);
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                            Log.e(LOG_TAG, "Error retrieving tasks " + e.getMessage());
                         }
                     });
                 }
@@ -336,6 +324,77 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
                 Log.e(LOG_TAG, "Error retrieving workspaces " + e.getMessage());
             }
         });
+    }
+
+
+    /**
+     * Constructs Content values to be used to insert/update task data
+     * @param task the task to construct Content Values for
+     * @return {@link android.content.ContentValues} with task data
+     */
+    private ContentValues getTaskValues(AsanaTask task) {
+        ContentValues taskValues = new ContentValues();
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ID, task.getId());
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_CREATED_AT, task.getCreatedAt());
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_WORKSPACE_ID, task.getWorkspace() != null ?
+                task.getWorkspace().getId() : null);
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_STATUS, task.getAssigneeStatus());
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED, task.getCompleted());
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_NAME, task.getName());
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_DUE_ON, task.getDueOn());
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_NOTES, task.getNotes());
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_COMPLETED_AT, task.getCompletedAt());
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_MODIFIED_AT, task.getModifiedAt());
+        taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ASSIGNEE_ID,
+                task.getAssignee() != null ? task.getAssignee().getId() : null);
+
+
+        if (task.getProjects() != null && task.getProjects().size() > 0) {
+            // Probably not a good way, but so far ok
+            taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_PROJECT_ID, task.getProjects().get(0).getId());
+        }
+        return taskValues;
+    }
+
+    /**
+     * Constructs Content values to be used to insert/update project data
+     * @param project the project to construct Content Values for
+     * @return {@link android.content.ContentValues} with project data
+     */
+    private ContentValues getProjectValues(AsanaProject project) {
+        ContentValues projectCV = new ContentValues();
+        projectCV.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_ID, project.getId());
+        projectCV.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_CREATED_AT, project.getCreatedAt());
+        projectCV.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_COLOR, project.getColor());
+        projectCV.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_WORKSPACE_ID, project.getWorkspace().getId());
+        projectCV.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_ARCHIVED, project.getArchived());
+        projectCV.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_NAME, project.getName());
+        projectCV.put(GsanaContract.ProjectEntry.COLUMN_PROJECT_MODIFIED_AT, project.getModifiedAt());
+        return projectCV;
+    }
+
+
+    /**
+     * Updates values of single task
+     * @param task the updated task
+     */
+    private void performTaskUpdate(AsanaTask task) {
+        Log.d(LOG_TAG, "Performing task update " + task.getId());
+        ContentValues taskValues = getTaskValues(task);
+        mContext.getContentResolver().update(GsanaContract.TaskEntry.buildTaskUri(task.getId()),
+                taskValues, null, null);
+
+    }
+
+    /**
+     * Performs update of the project. Should be called after the insertion
+     * @param project the project to update
+     */
+    private void performProjectUpdate(AsanaProject project) {
+        Log.d(LOG_TAG, "Performing project update " + project.getId());
+        ContentValues projectCV = getProjectValues(project);
+        mContext.getContentResolver().update(GsanaContract.ProjectEntry.buildProjectUri(project.getId()),
+                projectCV, null, null);
     }
 
     /**

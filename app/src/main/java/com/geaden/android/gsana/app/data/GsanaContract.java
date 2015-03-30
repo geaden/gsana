@@ -18,6 +18,7 @@ public class GsanaContract {
     public static final String PATH_WORKSPACE = "workspace";
     public static final String PATH_PROJECT = "project";
     public static final String PATH_TASK = "task";
+    public static final String PATH_STORY = "story";
     public static final String PATH_USER = "user";
 
     /**
@@ -211,17 +212,5 @@ public class GsanaContract {
         public static Uri buildUserUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
-    }
-
-    /** Defines relationship between task and project. Auxiliary table */
-    public static class TaskProjectEntry implements BaseColumns {
-        // Table name
-        public static final String TABLE_NAME = "tasks_projects";
-
-        // User id column name
-        public static final String COLUMN_TASK_ID = "task_id";
-
-        // User email column name
-        public static final String COLUMN_PROJECT_ID = "project_id";
     }
 }

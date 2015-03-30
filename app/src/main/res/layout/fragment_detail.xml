@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
     android:background="@color/gsana_background_color"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context=".TaskDetailActivity">
 
     <!-- Assignee Information -->
     <LinearLayout
@@ -15,12 +16,13 @@
         <com.geaden.android.gsana.app.views.RoundedImageView
             android:id="@+id/asana_task_assignee_photo"
             android:layout_width="wrap_content"
-            android:src="@drawable/nopicture"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:src="@drawable/nopicture"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:textColor="@android:color/white"
+            tools:text="Foo Bar"
             android:fontFamily="sans-serif-condensed"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:layout_marginLeft="@dimen/abc_action_bar_default_padding_material"
@@ -43,7 +45,7 @@
             android:id="@+id/asana_task_name"
             android:fontFamily="sans-serif-condensed"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Finish Mockups"
+            tools:text="Finish Mockups"
             android:textColor="@android:color/white"
             android:gravity="center_vertical"
             android:layout_width="match_parent"
@@ -59,7 +61,7 @@
         <TextView
             android:id="@+id/asana_task_detail_project"
             android:textColor="@android:color/white"
-            android:text="Project 1"
+            tools:text="Project 1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>
@@ -68,7 +70,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Task Description"
+        tools:text="Task Description"
         android:textColor="@android:color/white"
         android:autoLink="web|email"
         android:textColorLink="@color/material_blue_grey_950"

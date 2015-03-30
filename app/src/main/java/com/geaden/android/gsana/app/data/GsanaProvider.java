@@ -162,10 +162,10 @@ public class GsanaProvider extends ContentProvider {
             case PROJECT_ID:
             {
                 retCursor = mOpenHelper.getReadableDatabase().query(
-                    GsanaContract.ProjectEntry.TABLE_NAME,
+                        GsanaContract.ProjectEntry.TABLE_NAME,
                         projection,
-                        GsanaContract.ProjectEntry.COLUMN_PROJECT_ID + " = '" + ContentUris.parseId(uri) + "'",
-                        null,
+                        GsanaContract.ProjectEntry.COLUMN_PROJECT_ID + " = ?",
+                        new String[]{String.valueOf(ContentUris.parseId(uri))},
                         null,
                         null,
                         sortOrder
@@ -381,12 +381,18 @@ public class GsanaProvider extends ContentProvider {
                 rowsUpdated = db.update(GsanaContract.ProjectEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
+            case PROJECT_ID:
+                rowsUpdated = db.update(GsanaContract.ProjectEntry.TABLE_NAME, values,
+                        GsanaContract.ProjectEntry.COLUMN_PROJECT_ID + " = ?",
+                        new String[]{String.valueOf(ContentUris.parseId(uri))});
+                break;
             case TASK:
                 rowsUpdated = db.update(GsanaContract.TaskEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
             case TASK_ID:
-                rowsUpdated = db.update(GsanaContract.TaskEntry.TABLE_NAME, values, GsanaContract.TaskEntry.COLUMN_TASK_ID + " = ?",
+                rowsUpdated = db.update(GsanaContract.TaskEntry.TABLE_NAME, values,
+                        GsanaContract.TaskEntry.COLUMN_TASK_ID + " = ?",
                         new String[]{String.valueOf(ContentUris.parseId(uri))});
                 break;
             case USER:

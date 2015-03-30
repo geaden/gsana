@@ -16,7 +16,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/greeting"
-                android:text="Good Day Gennady"
+                tools:text="Good Day Gennady"
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:gravity="center"
                 android:fontFamily="sans-serif-condensed"
@@ -26,7 +26,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/today_tasks"
-                android:text="You have 4 task for Today"
+                tools:text="You have 4 task for Today"
                 android:fontFamily="sans-serif-condensed"
                 android:textColor="@android:color/white"
                 android:gravity="center"
@@ -34,6 +34,7 @@
             <ListView
                 android:id="@+id/listview_asana_tasks"
                 style="@style/TasksListViewStyle"
+                tools:listitem="@layout/list_asana_task_item"
                 android:drawSelectorOnTop="true"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />

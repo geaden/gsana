@@ -32,7 +32,6 @@ public class AsanaApi2 {
      * Singleton of Asana API implementation
      *
      * @param context the context of application
-     * @param accessToken access token
      */
     protected AsanaApi2(Context context) {
         mAsanaApiBridge = AsanaApiBridge.getInstance(context);
@@ -215,7 +214,7 @@ public class AsanaApi2 {
      * Request the of projects for logged-in user
      * @param callback Callback on result or on error
      */
-    public void projects(AsanaWorkspace workspace, final AsanaCallback<List<AsanaProject>> callback) {
+    public void projects(final AsanaWorkspace workspace, final AsanaCallback<List<AsanaProject>> callback) {
         // retrieve projects
         Log.i(LOG_TAG, "Requesting projects for worspace " + workspace.getId());
         mAsanaApiBridge.request(HttpHelper.Method.GET, "/workspaces/" + workspace.getId() + "/projects",
@@ -226,7 +225,9 @@ public class AsanaApi2 {
                         List<AsanaProject> projects = new ArrayList<AsanaProject>();
                         try {
                             for (int i = 0; i < data.length(); i++) {
-                                projects.add(new AsanaProject(data.getJSONObject(i)));
+                                AsanaProject project = new AsanaProject(data.getJSONObject(i));
+                                project.setWorkspace(workspace);
+                                projects.add(project);
                             }
                             callback.onResult(projects);
                         } catch (JSONException e) {
@@ -241,6 +242,44 @@ public class AsanaApi2 {
                     }
                 });
     }
+
+
+    /**
+     * Gets tasks for desired project
+     * @param project the project to get tasks for
+     * @param callback {@link com.geaden.android.gsana.app.api.AsanaCallback} callback for data
+     */
+    public void projectTasks(final AsanaProject project, final AsanaCallback<List<AsanaTask>> callback) {
+        Log.i(LOG_TAG, "Requesting tasks for project " + project.getId());
+        mAsanaApiBridge.request(HttpHelper.Method.GET, "/projects/" + project.getId() + "/tasks",
+                null, new AsanaCallback<AsanaResponse>() {
+                    @Override
+                    public void onResult(AsanaResponse response) {
+                        JSONArray data = (JSONArray) response.getData();
+                        List<AsanaTask> projectTasks = new ArrayList<AsanaTask>();
+                        try {
+                            for (int i = 0; i < data.length(); i++) {
+                                AsanaTask projectTask = new AsanaTask(data.getJSONObject(i));
+                                List<AsanaProject> taskProjects = new ArrayList<AsanaProject>();
+                                taskProjects.add(project);
+                                projectTask.setWorkspace(project.getWorkspace());
+                                projectTask.setProjects(taskProjects);
+                                projectTasks.add(projectTask);
+                            }
+                            callback.onResult(projectTasks);
+                        } catch (JSONException e) {
+                            callback.onError(e);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable exception) {
+                        callback.onError(exception);
+                    }
+                });
+    }
+
+    public void taskStories() {};
 
     /**
      * Gets projects details
