@@ -45,7 +45,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
 
     // Interval at which to sync with Asana, in milliseconds.
     // 1000 milliseconds (1 second) * 60 seconds (1 minute) * 180 = 3 hours
-    public static final int SYNC_INTERVAL = 60 * 180;
+    public static final int SYNC_INTERVAL = 1000 * 60 * 180;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
 
     private boolean DEBUG = false;
@@ -243,6 +243,8 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
         // Get instance AsanaApiClient
         final AsanaApi2 asanaApi = AsanaApi2.getInstance(mContext);
 
+        // TODO: Check if update needed
+
         // Retrieve user info
         asanaApi.me(new AsanaCallback<AsanaUser>() {
             @Override
@@ -342,9 +344,14 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
      * @param context An app context
      */
     public static void syncImmediately(Context context) {
+        Log.d(LOG_TAG, "syncImmediately invoked");
         Bundle bundle = new Bundle();
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        /*
+        * Request the sync for the default account, authority, and
+        * manual sync settings
+        */
         ContentResolver.requestSync(getSyncAccount(context),
                 context.getString(R.string.content_authority), bundle);
     }
@@ -357,6 +364,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
      * @return a fake account.
      */
     public static Account getSyncAccount(Context context) {
+        Log.d(LOG_TAG, "getSyncAccount invoked");
         // Get an instance of the Android account manager
         AccountManager accountManager =
                 (AccountManager) context.getSystemService(Context.ACCOUNT_SERVICE);
@@ -379,6 +387,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
             // here.
             onAccountCreated(newAccount, context);
         }
+        Log.d(LOG_TAG, "getSyncAccount finished");
         return newAccount;
     }
 
@@ -392,6 +401,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             // we can enable inexact timers in our periodic sync
             SyncRequest request = new SyncRequest.Builder().
+                    setExtras(new Bundle()).
                     syncPeriodic(syncInterval, flexTime).
                     setSyncAdapter(account, authority).build();
             ContentResolver.requestSync(request);
