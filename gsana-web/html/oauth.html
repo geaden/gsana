@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Gsana :: OAuth</title>
+  </head>	
+  <body onload="load()">
+    <script>
+      function load() {
+	var data = window.location.search.substring(1);
+	startActivityUri = 'com.geaden.android.gsana.app://data?' + data;
+	console.log('startActivityUri: ' + startActivityUri);
+	document.location.href = 'com.geaden.android.gsana.app://data?' + data;
+	return true;
+      }
+    </script>
+  </body>
+</html>

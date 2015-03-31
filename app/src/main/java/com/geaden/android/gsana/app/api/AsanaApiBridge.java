@@ -98,7 +98,7 @@ public class AsanaApiBridge {
             if (params != null && (httpMethod.equals(HttpHelper.Method.POST)
                     || httpMethod.equals(HttpHelper.Method.PUT))) {
                 urlConnection.setRequestProperty("Content-Type",
-                        "application/json");
+                        "application/x-www-form-urlencoded");
                 urlConnection.setRequestProperty("Content-Length", "" +
                         Integer.toString(params.getBytes().length));
                 urlConnection.setRequestProperty("Content-Language", "en-US");
@@ -115,7 +115,9 @@ public class AsanaApiBridge {
             urlConnection.connect();
             int serverCode = urlConnection.getResponseCode();
             // successful query
-            if (serverCode == HttpHelper.ResponseCode.OK) {
+            if (serverCode == HttpHelper.ResponseCode.OK
+                || serverCode == HttpHelper.ResponseCode.CREATED
+                || serverCode == HttpHelper.ResponseCode.DELETED) {
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
                 StringBuffer buffer = new StringBuffer();

@@ -9,6 +9,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -150,13 +151,27 @@ public class Utility {
      * @return formatted date
      */
     public static String sqlStringDateFormat(String sqlDate) {
-        String formattedDate = sqlDate;
         final String CURR_DATE_FORMAT = "yyyy-MM-dd";
         final String DATE_FORMAT = "MMM d, yyyy";
-        SimpleDateFormat currSdf = new SimpleDateFormat(CURR_DATE_FORMAT);
-        SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+        String formattedDate = dateReformat(sqlDate, CURR_DATE_FORMAT, DATE_FORMAT);
+        return formattedDate;
+    }
+
+    /**
+     * Reformats date from one pattern to another
+     * @param sDate the date to reformat
+     * @param fromPattern from pattern
+     * @param toPattern to pattern
+     * @return reformatted date
+     */
+    public static String dateReformat(String sDate, String fromPattern, String toPattern) {
+        String formattedDate = sDate;
+        SimpleDateFormat currSdf = new SimpleDateFormat(fromPattern);
+        currSdf.setTimeZone(TimeZone.getDefault());
+        SimpleDateFormat sdf = new SimpleDateFormat(toPattern);
+        sdf.setTimeZone(TimeZone.getDefault());
         try {
-            Date date = currSdf.parse(sqlDate);
+            Date date = currSdf.parse(sDate);
             formattedDate = sdf.format(date);
         } catch (ParseException e) {
             e.printStackTrace();

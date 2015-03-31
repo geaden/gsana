@@ -11,7 +11,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -28,27 +27,34 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.Chronometer;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.geaden.android.gsana.app.LoadersColumns;
 import com.geaden.android.gsana.app.LoginActivity;
-import com.geaden.android.gsana.app.MainActivity;
 import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.TaskDetailActivity;
 import com.geaden.android.gsana.app.Utility;
+import com.geaden.android.gsana.app.adapters.GsanaStoriesAdapater;
+import com.geaden.android.gsana.app.api.AsanaApi2;
+import com.geaden.android.gsana.app.api.AsanaCallback;
 import com.geaden.android.gsana.app.api.toggl.GToggl;
 import com.geaden.android.gsana.app.api.toggl.TimeEntry;
 import com.geaden.android.gsana.app.api.toggl.util.DateUtil;
 import com.geaden.android.gsana.app.data.GsanaContract;
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
+import com.geaden.android.gsana.app.models.AsanaStory;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Task detail fragment.
@@ -94,6 +100,13 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
     private TextView mTaskProject;
     private boolean mTaskTimerRunning;
 
+    /** Task stories **/
+    private ListView mTaskStoriesListView;
+    private TextView mTaskCommentTextView;
+    private List<AsanaStory> mTaskStories;
+    private GsanaStoriesAdapater mTaskStoriesAdapter;
+
+
 
     public TaskDetailFragment() {
         setHasOptionsMenu(true);
@@ -120,11 +133,11 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
 
         // If onLoadFinished happens before this, we can go ahead and set the share intent now.
         if (mShareTask != null) {
-            mShareActionProvider.setShareIntent(createShareForecastIntent());
+            mShareActionProvider.setShareIntent(createShareTaskIntent());
         }
     }
 
-    private Intent createShareForecastIntent() {
+    private Intent createShareTaskIntent() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
         shareIntent.setType("text/plain");
@@ -166,6 +179,30 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         mTaskTimerToggeButton = (ToggleButton) rootView.findViewById(R.id.btn_toggl_start_timer);
         mTaskTimer = (Chronometer) rootView.findViewById(R.id.chrono_toggl_timer);
         mTaskProject = (TextView) rootView.findViewById(R.id.asana_task_detail_project);
+
+        /** Task Stories **/
+        mTaskStoriesListView = (ListView) rootView.findViewById(R.id.task_actions_listview);
+        mTaskCommentTextView = (TextView) rootView.findViewById(R.id.task_comment);
+        mTaskStoriesAdapter = new GsanaStoriesAdapater(getActivity(), R.layout.list_task_story_item);
+        mTaskStoriesListView.setAdapter(mTaskStoriesAdapter);
+        // Retrieve stories
+        FetchStoriesTask fetchStoriesTask = new FetchStoriesTask(Long.valueOf(mTaskId));
+        fetchStoriesTask.execute();
+
+        final ImageButton postCommentButton = (ImageButton) rootView.findViewById(R.id.button_post_task_comment);
+        postCommentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mTaskCommentTextView.getText().toString().isEmpty()) {
+                    Toast.makeText(getActivity(), "Please provide a comment", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                PostCommentTask postCommentTask = new PostCommentTask(Long.valueOf(mTaskId),
+                        mTaskCommentTextView.getText().toString());
+                postCommentTask.execute();
+            }
+        });
+
 
         if (!mTogglEnabled) {
             rootView.findViewById(R.id.toggl_timer_section).setVisibility(View.GONE);
@@ -250,15 +287,18 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
 
                     // Share intent task string
                     mShareTask = String.format("%s - %s - %s", taskName,
-                            taskCompleted, taskNotes, mTaskDuration);
+                            taskCompleted.equals(TRUE) ? "Completed" : "In Progress", taskNotes);
+
+                    // Add task permalink to share string
+                    mShareTask += "\nhttps://app.asana.com/0/0/" + mTaskId;
 
                     if (mTaskDuration != null) {
-                        mShareTask += "#duration " + mTaskDuration;
+                        mShareTask += "\n#duration " + mTaskDuration;
                     }
 
                     // If onCreateOptionsMenu has already happened, we need to update the share intent now.
                     if (mShareActionProvider != null) {
-                        mShareActionProvider.setShareIntent(createShareForecastIntent());
+                        mShareActionProvider.setShareIntent(createShareTaskIntent());
                     }
 
                     if (mTogglEnabled && mTogglKeyValid) {
@@ -410,6 +450,94 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                 mNotificationManager.cancel(TASK_NOTIFICATION_ID);
             }
             return null;
+        }
+    }
+
+    /**
+     * Fetches stories for the task
+     */
+    private class FetchStoriesTask extends AsyncTask<Void, Void, Void> {
+        private long mTaskId;
+        private List<AsanaStory> mTaskStories;
+
+        public FetchStoriesTask(long taskId) {
+            mTaskId = taskId;
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            AsanaApi2 asanaApi2 = AsanaApi2.getInstance(getActivity());
+            asanaApi2.taskStories(mTaskId, new AsanaCallback<List<AsanaStory>>() {
+                @Override
+                public void onResult(List<AsanaStory> taskStories) {
+                    mTaskStories = taskStories;
+                }
+
+                @Override
+                public void onError(Throwable exception) {
+                    Log.d(LOG_TAG, "Error retrieving task stories");
+                }
+            });
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            mTaskStoriesAdapter.addAll(mTaskStories);
+            mTaskStoriesAdapter.notifyDataSetChanged();
+        }
+    }
+
+    /**
+     * Post comment on a task
+     */
+    private class PostCommentTask extends AsyncTask<Void, Void, Void> {
+        private long mTaskId;
+        private AsanaStory mStory;
+        private String mComment;
+
+        public PostCommentTask(long taskId, String comment) {
+            mTaskId = taskId;
+            mComment = comment;
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity(), "Posting a comment...", Toast.LENGTH_SHORT).show();
+                }
+            });
+            AsanaApi2 asanaApi2 = AsanaApi2.getInstance(getActivity());
+            asanaApi2.addTaskComment(mTaskId, mComment, new AsanaCallback<AsanaStory>() {
+                @Override
+                public void onResult(AsanaStory taskStory) {
+                    mStory = taskStory;
+                }
+
+                @Override
+                public void onError(Throwable exception) {
+                    Log.d(LOG_TAG, "Error posting a comment");
+                }
+            });
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity(), "Comment posted!", Toast.LENGTH_SHORT).show();
+                }
+            });
+            Log.i(LOG_TAG, "Story " + mStory.toString());
+            mTaskCommentTextView.setText("");
+            mTaskStoriesAdapter.add(mStory);
+            mTaskStoriesAdapter.notifyDataSetChanged();
         }
     }
 }

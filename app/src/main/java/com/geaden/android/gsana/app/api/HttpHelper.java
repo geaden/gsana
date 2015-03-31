@@ -7,6 +7,8 @@ public class HttpHelper {
     /** Response codes **/
     public static class ResponseCode {
         public static final int OK = 200;
+        public static final int CREATED = 201;
+        public static final int DELETED = 204;
         public static final int UNAUTHORIZED = 401;
         public static final int ACCESS_DENIED = 403;
     }

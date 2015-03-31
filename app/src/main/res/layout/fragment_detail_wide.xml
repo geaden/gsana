@@ -105,6 +105,7 @@
     <ListView
         android:id="@+id/task_actions_listview"
         android:layout_width="match_parent"
+        tools:listitem="@layout/list_task_story_item"
         android:layout_height="120dp" />
     <!--Task comment-->
     <LinearLayout
@@ -113,6 +114,7 @@
         android:orientation="horizontal"
         android:gravity="bottom">
         <EditText
+            android:id="@+id/task_comment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Add comment"
@@ -124,9 +126,11 @@
             android:textColorHint="@android:color/white"
             android:layout_weight="1"/>
         <ImageButton
+            android:id="@+id/button_post_task_comment"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/ic_content_send"/>
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_action_send_2"/>
         </LinearLayout>
 </LinearLayout>
 

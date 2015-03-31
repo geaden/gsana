@@ -11,8 +11,10 @@
     <!-- Assignee Information -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_weight="1">
         <com.geaden.android.gsana.app.views.RoundedImageView
             android:id="@+id/asana_task_assignee_photo"
             android:layout_width="wrap_content"
@@ -25,8 +27,8 @@
             tools:text="Foo Bar"
             android:fontFamily="sans-serif-condensed"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:layout_marginLeft="@dimen/abc_action_bar_default_padding_material"
             android:gravity="center_vertical"
+            android:layout_marginLeft="@dimen/abc_action_bar_default_padding_material"
             android:id="@+id/asana_task_assignee"/>
     </LinearLayout>
 
@@ -55,8 +57,8 @@
     <!-- Task project info -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0px"
-        android:orientation="horizontal"
+        android:layout_height="0dp"
+        android:orientation="vertical"
         android:layout_weight="1">
         <TextView
             android:id="@+id/asana_task_detail_project"
@@ -64,26 +66,26 @@
             tools:text="Project 1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+        <!--Task Description-->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Task Description"
+            android:textColor="@android:color/white"
+            android:autoLink="web|email"
+            android:textColorLink="@color/material_blue_grey_950"
+            android:fontFamily="sans-serif-condensed"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/asana_task_description"/>
     </LinearLayout>
-
-    <!--Task Description-->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:text="Task Description"
-        android:textColor="@android:color/white"
-        android:autoLink="web|email"
-        android:textColorLink="@color/material_blue_grey_950"
-        android:fontFamily="sans-serif-condensed"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:id="@+id/asana_task_description" />
 
     <!--Toggl integration-->
     <LinearLayout
         android:id="@+id/toggl_timer_section"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:layout_weight="1">
         <ToggleButton
             android:id="@+id/btn_toggl_start_timer"
             android:background="@drawable/btn_toggl_start"
@@ -95,6 +97,7 @@
             android:id="@+id/chrono_toggl_timer"
             android:layout_marginLeft="16dp"
             android:gravity="center_vertical"
+            android:format="00:00:00"
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:layout_width="match_parent"
@@ -104,27 +107,38 @@
     <ListView
         android:id="@+id/task_actions_listview"
         android:layout_width="match_parent"
-        android:layout_height="120dp" />
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:clickable="false"
+        android:fadeScrollbars="false"
+        android:divider="@android:color/transparent"
+        android:listSelector="@android:color/transparent"
+        tools:listitem="@layout/list_task_story_item"/>
     <!--Task comment-->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:orientation="horizontal"
-        android:gravity="bottom">
+        android:gravity="bottom"
+        android:layout_weight="1">
         <EditText
+            android:id="@+id/task_comment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Add comment"
             android:textColor="@android:color/white"
             android:fontFamily="sans-serif-condensed"
+            android:textColorHint="@android:color/white"
             android:windowSoftInputMode="stateHidden"
             android:descendantFocusability="beforeDescendants"
             android:focusableInTouchMode="true"
             android:layout_weight="1"/>
         <ImageButton
+            android:id="@+id/button_post_task_comment"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/ic_content_send"/>
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_action_send_2"/>
         </LinearLayout>
 </LinearLayout>
 

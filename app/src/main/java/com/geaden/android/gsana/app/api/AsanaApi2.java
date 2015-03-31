@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.geaden.android.gsana.app.models.AsanaProject;
+import com.geaden.android.gsana.app.models.AsanaStory;
 import com.geaden.android.gsana.app.models.AsanaTask;
 import com.geaden.android.gsana.app.models.AsanaUser;
 import com.geaden.android.gsana.app.models.AsanaWorkspace;
@@ -279,7 +280,63 @@ public class AsanaApi2 {
                 });
     }
 
-    public void taskStories() {};
+    /**
+     * Retrieves task stories
+     */
+    public void taskStories(long taskId, final AsanaCallback<List<AsanaStory>> callback) {
+        Log.i(LOG_TAG, "Requesting stories for " + taskId);
+        mAsanaApiBridge.request(HttpHelper.Method.GET, "/tasks/" + taskId + "/stories",
+                null, new AsanaCallback<AsanaResponse>() {
+                    @Override
+                    public void onResult(AsanaResponse response) {
+                        JSONArray data = (JSONArray) response.getData();
+                        if (data == null) {
+                            return;
+                        }
+                        List<AsanaStory> taskStories = new ArrayList<AsanaStory>();
+                        try {
+                            for (int i = 0; i < data.length(); i++) {
+                                AsanaStory taskStory = new AsanaStory(data.getJSONObject(i));
+                                taskStories.add(taskStory);
+                            }
+                            callback.onResult(taskStories);
+                        } catch (JSONException e) {
+                            callback.onError(e);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable exception) {
+                        callback.onError(exception);
+                    }
+                });
+
+    };
+
+
+    /**
+     * Adds comment to a task
+     */
+    public void addTaskComment(long taskId, String taskComment, final AsanaCallback<AsanaStory> callback) {
+        Log.i(LOG_TAG, "Commenting on " + taskId);
+        mAsanaApiBridge.request(HttpHelper.Method.POST, "/tasks/" + taskId + "/stories",
+                "text=" + taskComment, new AsanaCallback<AsanaResponse>() {
+                    @Override
+                    public void onResult(AsanaResponse response) {
+                        JSONObject data = (JSONObject) response.getData();
+                        AsanaStory taskStory = new AsanaStory(data);
+                        callback.onResult(taskStory);
+                    }
+
+                    @Override
+                    public void onError(Throwable exception) {
+                        callback.onError(exception);
+                    }
+                });
+
+    };
+
+
 
     /**
      * Gets projects details

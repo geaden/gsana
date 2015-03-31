@@ -5,9 +5,9 @@
     android:layout_height="match_parent"
     android:paddingTop="@dimen/activity_top_margin"
     android:paddingBottom="@dimen/activity_top_margin"
+    android:orientation="vertical"
     android:background="@color/gsana_background_color"
     tools:context=".fragments.TaskListFragment">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -39,6 +39,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
         </LinearLayout>
+        <!-- Loading progress bar -->
+        <ProgressBar
+            android:id="@+id/content_loading"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
         <!-- Floating action button -->
         <com.melnykov.fab.FloatingActionButton
             android:id="@+id/button_floating_action"
