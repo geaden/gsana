@@ -1,18 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/gsana_background_color"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
     
     <EditText
         android:layout_width="match_parent"
         android:hint="Task Name"
+        android:textColor="@android:color/white"
+        android:textColorHint="@android:color/white"
         android:id="@+id/task_name"
         android:layout_height="20pt" />
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinner_workspaces"
+        android:textColor="@android:color/white"
+        android:textColorHint="@android:color/white"
+        android:layout_gravity="center_horizontal" />
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/spinner_projects"
+        android:textColor="@android:color/white"
+        android:textColorHint="@android:color/white"
+        android:layout_gravity="center_horizontal" />
 
     <EditText
         android:layout_width="match_parent"
         android:hint="Task Description"
+        android:textColor="@android:color/white"
+        android:textColorHint="@android:color/white"
         android:id="@+id/task_description"
         android:layout_height="100pt" />
 

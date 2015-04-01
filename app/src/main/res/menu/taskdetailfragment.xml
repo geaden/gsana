@@ -3,6 +3,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
+    <item android:id="@+id/open_task_asana"
+        android:title="@string/task_link"
+        android:orderInCategory="90"
+        app:showAsAction="never"/>
     <item android:id="@+id/action_share"
         android:title="@string/action_share"
         android:orderInCategory="100"

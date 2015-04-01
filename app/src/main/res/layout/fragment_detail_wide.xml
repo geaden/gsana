@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
     xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
@@ -10,8 +14,9 @@
     <!-- Assignee Information -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:layout_weight="1">
         <com.geaden.android.gsana.app.views.RoundedImageView
             android:id="@+id/asana_task_assignee_photo"
             android:layout_width="wrap_content"
@@ -34,6 +39,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="horizontal"
+        android:descendantFocusability="beforeDescendants"
+        android:focusableInTouchMode="true"
         android:layout_weight="1">
         <CheckBox
             android:layout_width="wrap_content"
@@ -69,8 +76,9 @@
     <LinearLayout
         android:id="@+id/toggl_timer_section"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:layout_weight="1">
         <!--Task Description-->
         <TextView
             android:layout_width="wrap_content"
@@ -105,14 +113,20 @@
     <ListView
         android:id="@+id/task_actions_listview"
         android:layout_width="match_parent"
+        android:clickable="false"
+        android:fadeScrollbars="false"
+        android:divider="@android:color/transparent"
+        android:listSelector="@android:color/transparent"
         tools:listitem="@layout/list_task_story_item"
-        android:layout_height="120dp" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
     <!--Task comment-->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:orientation="horizontal"
-        android:gravity="bottom">
+        android:gravity="bottom"
+        android:layout_weight="1">
         <EditText
             android:id="@+id/task_comment"
             android:layout_width="match_parent"
@@ -133,4 +147,5 @@
             android:src="@drawable/ic_action_send_2"/>
         </LinearLayout>
 </LinearLayout>
+</ScrollView>
 

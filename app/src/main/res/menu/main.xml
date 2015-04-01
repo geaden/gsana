@@ -6,9 +6,9 @@
         android:title="@string/action_logout"
         android:orderInCategory="100"
         app:showAsAction="never" />
-    <item android:id="@+id/action_sync"
-        android:title="@string/action_sync"
-        android:icon="@drawable/ic_notification_sync"
+    <item android:id="@+id/action_filter_dismiss"
+        android:title="@string/action_filter_dismiss"
+        android:icon="@drawable/ic_action_filter_dismiss"
         android:orderInCategory="200"
         app:showAsAction="always" />
     <item android:id="@+id/action_settings"

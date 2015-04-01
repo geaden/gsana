@@ -175,41 +175,20 @@ public class GsanaProvider extends ContentProvider {
             // "task"
             case TASK:
             {
-                StringBuilder sb = new StringBuilder();
-                String projectionString = "*";
-                if (projection != null) {
-                    for (String projectionColumn : projection) {
-                        sb.append(projectionColumn);
-                        sb.append(", ");
-                    }
-                    projectionString = sb.toString();
-                    Log.d(LOG_TAG, projectionString);
-                    projectionString = projectionString.substring(0, projectionString.length() - 2);
+                if (selection != null) {
+                    selection = sTasksListSelection + " AND " + selection;
+                } else {
+                    selection = sTasksListSelection;
                 }
-                Log.d(LOG_TAG, "Projection string " + projectionString);
-                // TODO: User query builder
+                Log.d(LOG_TAG, "selection " + selection);
                 retCursor = sTasksWithProjectQueryBuilder.query(
                         mOpenHelper.getReadableDatabase(),
                         projection,
-                        sTasksListSelection,
-                        null,
+                        selection,
+                        selectionArgs,
                         null,
                         null,
                         sortOrder);
-//                retCursor = mOpenHelper.getReadableDatabase().rawQuery(
-//                        "SELECT " + projectionString + " FROM " + GsanaContract.TaskEntry.TABLE_NAME +
-//                        " LEFT JOIN " + GsanaContract.ProjectEntry.TABLE_NAME +
-//                        " ON " + GsanaContract.TaskEntry.COLUMN_TASK_PROJECT_ID + " = " + GsanaContract.ProjectEntry.COLUMN_PROJECT_ID,
-//                        null
-//                );
-//                retCursor = mOpenHelper.getReadableDatabase().query(
-//                        GsanaContract.TaskEntry.TABLE_NAME,
-//                        projection,
-//                        selection,
-//                        selectionArgs,
-//                        null,
-//                        null,
-//                        sortOrder);
                 break;
             }
             // "task/*"

@@ -7,7 +7,7 @@
     <string name="action_settings">Settings</string>
     <string name="action_share">Share</string>
     <string name="action_logout">Logout</string>
-    <string name="action_sync">Sync</string>
+    <string name="action_filter_dismiss">Dismiss filter</string>
 
     <!-- Activities titles -->
     <string name="title_activity_oauth">OAuthActivity</string>
@@ -43,5 +43,6 @@
     <string name="pref_toggle_disabled_summary">Toggl integration disabled</string>
     <string name="msg_enter_valid_toggl_key">Enter Toggl Key. Checkout settings</string>
     <string name="failed_to_refresh_token">Failed to refresh token</string>
+    <string name="task_link">Open task in Asana</string>
 
 </resources>

@@ -1,7 +1,5 @@
 package com.geaden.android.gsana.app.fragments;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v4.app.LoaderManager;
@@ -12,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.Loader;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,10 +17,12 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.geaden.android.gsana.app.MainActivity;
+import com.geaden.android.gsana.app.UserInfoListener;
 import com.geaden.android.gsana.app.adapters.GsanaProjectsAdapter;
 import com.geaden.android.gsana.app.LoadersColumns;
-import com.geaden.android.gsana.app.MainActivity;
 import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.Utility;
 import com.geaden.android.gsana.app.data.GsanaContract;
@@ -45,7 +44,7 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
     private GsanaProjectsAdapter mProjectsAdapter;
     private SimpleCursorAdapter mWorkspacesAdapter;
 
-    private long SELECTED_WORKSPACE_ID = 0L;
+    private long mSelectedWorkspaceId = 0L;
 
     // List views
     private ListView mWorkspacesList;
@@ -84,41 +83,62 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
             public void onItemClick(AdapterView<?> workspacesAdapterView, View view, int position, long id) {
                 Cursor cursor = mWorkspacesAdapter.getCursor();
                 if (null != cursor) {
-                    SELECTED_WORKSPACE_ID = cursor.getLong(LoadersColumns.COL_WORKSPACE_ID);
+                    mSelectedWorkspaceId = cursor.getLong(LoadersColumns.COL_WORKSPACE_ID);
+                    String workspaceTitle = cursor.getString(LoadersColumns.COL_WORKSPACE_NAME);
+                    ((OnGsanaDrawerItemSelected) getActivity()).onWorkspaceSelected(mSelectedWorkspaceId,
+                            workspaceTitle);
+                    // Reset selected project
+                    ((OnGsanaDrawerItemSelected) getActivity()).onProjectSelected(0, null);
                 }
 
-                ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(
-                        cursor.getString(LoadersColumns.COL_WORKSPACE_NAME));
                 getLoaderManager().restartLoader(ASANA_PROJECTS_LOADER, null, MainDrawerFragment.this);
             }
         });
 
-        mProjectList.setOnLongClickListener(new View.OnLongClickListener() {
+        mProjectList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public boolean onLongClick(View v) {
-                Cursor cursor = mProjectsAdapter.getCursor();
-                if (null != cursor) {
-                    // 1. Instantiate an AlertDialog.Builder with its constructor
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
-                    // 2. Chain together various setter methods to set the dialog characteristics
-                    builder.setMessage(cursor.getString(LoadersColumns.COL_PROJECT_NAME)).setTitle(
-                            cursor.getString(LoadersColumns.COL_PROJECT_NAME));
-                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onItemClick(AdapterView<?> projectsAdapterView, View view, int position, long id) {
+                if (mSelectedWorkspaceId == 0) {
+                    // Do not select project without Workspace selected
+                    mProjectList.clearChoices();
+                    mWorkspacesList.requestLayout();
+                    getActivity().runOnUiThread(new Runnable() {
                         @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
+                        public void run() {
+                            Toast.makeText(getActivity(), "Please, select workspace", Toast.LENGTH_SHORT).show();
                         }
                     });
-                    // 3. Get the AlertDialog from create()
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
+                    return;
                 }
-                return true;
+                Cursor cursor = mProjectsAdapter.getCursor();
+                if (null != cursor) {
+                    long projectId = cursor.getLong(LoadersColumns.COL_PROJECT_ID);
+                    String projectTitle = cursor.getString(LoadersColumns.COL_PROJECT_NAME);
+                    ((OnGsanaDrawerItemSelected) getActivity()).onProjectSelected(projectId,
+                            projectTitle);
+                }
             }
         });
 
         return rootView;
+    }
+
+    /**
+     * Handles workspaces and/or project selection from the drawer
+     */
+    public static interface OnGsanaDrawerItemSelected {
+        /**
+         * Notifies {@link com.geaden.android.gsana.app.fragments.TaskListFragment} when project is selected
+         * @param projectId the selected project
+         * @param projectTitle the project title to set
+         */
+        public void onProjectSelected(long projectId, String projectTitle);
+        /**
+         * Notifies {@link com.geaden.android.gsana.app.fragments.TaskListFragment} when workspace is selected
+         * @param workspaceId the selected workspace id
+         * @param workspaceTitle the workspace title to set
+         */
+        public void onWorkspaceSelected(long workspaceId, String workspaceTitle);
     }
 
     @Override
@@ -145,16 +165,19 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
                 break;
             case ASANA_PROJECTS_LOADER:
                 String selection = null;
-                if (SELECTED_WORKSPACE_ID > 0) {
+                String[] selectionArgs = null;
+                if (mSelectedWorkspaceId > 0) {
                     selection = GsanaContract.ProjectEntry.COLUMN_PROJECT_WORKSPACE_ID +
-                            " = " + SELECTED_WORKSPACE_ID;
+                            " = ?";
+                    selectionArgs = new String[]{String.valueOf(mSelectedWorkspaceId)};
+
                 }
                 cursorLoader = new CursorLoader(
                         getActivity(),
                         GsanaContract.ProjectEntry.CONTENT_URI,
                         LoadersColumns.ASANA_PROJECTS_COLUMNS,
                         selection,
-                        null,
+                        selectionArgs,
                         null
                 );
                 break;
@@ -201,7 +224,7 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
                         mGsanaUserVH.userPicImageView.setImageBitmap(userPic);
                     }
                     // Get user name and notify activity
-                    ((MainActivity) getActivity()).notifyUserInfo(currentUserName.split(" ")[0]);
+                    ((UserInfoListener) getActivity()).notifyUserInfo(currentUserName.split(" ")[0]);
                 }
                 break;
             default:
@@ -224,6 +247,17 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
     }
 
     /**
+     * Resets drawer state
+     */
+    public void resetDrawer() {
+        mSelectedWorkspaceId = 0;
+        mWorkspacesList.clearChoices();
+        mProjectList.clearChoices();
+        mWorkspacesList.requestLayout();
+        mProjectList.requestLayout();
+    }
+
+    /**
      * User View Holder
      */
     private class GsanaUserViewHolder {
@@ -233,7 +267,6 @@ public class MainDrawerFragment extends Fragment implements LoaderManager.Loader
         public GsanaUserViewHolder(View view) {
             userNameTextView = (TextView) view.findViewById(R.id.left_drawer_user_name);
             userPicImageView = (RoundedImageView) view.findViewById(R.id.left_drawer_user_pic);
-
         };
     }
 }

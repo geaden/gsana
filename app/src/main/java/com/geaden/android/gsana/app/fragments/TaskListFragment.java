@@ -24,14 +24,17 @@ import com.geaden.android.gsana.app.MainActivity;
 import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.TaskCreateActivity;
 import com.geaden.android.gsana.app.Utility;
+import com.geaden.android.gsana.app.data.GsanaContract;
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
 
 import com.melnykov.fab.FloatingActionButton;
 
+import java.util.Arrays;
+
 /**
  * Task list fragment.
  */
-public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor>, MainDrawerFragment.OnGsanaDrawerItemSelected {
     private final String LOG_TAG = getClass().getSimpleName();
 
     private GsanaTasksAdapter mTasksAdapter;
@@ -48,6 +51,8 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
     private static final int ASANA_TASK_LOADER = 0;
 
     private FloatingActionButton mFabButton;
+    private long mSelectedProjectId;
+    private long mSelectedWorkspaceId;
 
     public TaskListFragment() {
     }
@@ -160,12 +165,25 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         // This is called when a new Loader needs to be created.  This
         switch (i) {
             case ASANA_TASK_LOADER:
+                String selection = null;
+                String[] selectionArgs = null;
+                if (mSelectedWorkspaceId > 0) {
+                    selection = TaskEntry.COLUMN_TASK_WORKSPACE_ID + " = ?";
+                    selectionArgs = new String[]{String.valueOf(mSelectedWorkspaceId)};
+                }
+                if (mSelectedProjectId > 0) {
+                    selection += " AND " + TaskEntry.COLUMN_TASK_PROJECT_ID + " = ?";
+                    selectionArgs = new String[]{String.valueOf(mSelectedWorkspaceId),
+                            String.valueOf(mSelectedProjectId)};
+                }
+                Log.v(LOG_TAG, "Selection " + selection);
+                Log.v(LOG_TAG, "Selection Args " + Arrays.toString(selectionArgs));
                 cursorLoader = new CursorLoader(
                         getActivity(),
                         TaskEntry.CONTENT_URI,
                         LoadersColumns.ASANA_TASK_COLUMNS,
-                        null, //TaskEntry.COLUMN_TASK_WORKSPACE_ID + " = ?",
-                        null, //new String[]{mCurrentWorkspace},
+                        selection,
+                        selectionArgs,
                         null);
                 break;
             default:
@@ -223,7 +241,20 @@ public class TaskListFragment extends Fragment implements LoaderCallbacks<Cursor
         mPosition = position;
     }
 
+    @Override
+    public void onProjectSelected(long projectId, String projectTitle) {
+        Log.d(LOG_TAG, "Project selected! " + projectId);
+        mSelectedProjectId = projectId;
+        getLoaderManager().restartLoader(ASANA_TASK_LOADER, null, this);
+    }
 
+    @Override
+    public void onWorkspaceSelected(long workspaceId, String workspaceTitle) {
+        Log.d(LOG_TAG, "Workspace selected! " + workspaceId);
+        mSelectedWorkspaceId = workspaceId;
+        getLoaderManager().restartLoader(ASANA_TASK_LOADER, null, this);
+
+    }
 
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {

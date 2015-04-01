@@ -28,4 +28,5 @@
     <color name="gsana_background_color">#1F8DD6</color>
     <color name="task_item_color">#686AC6</color>
     <color name="task_due_time">#5ED16D</color>
+    <color name="pressed_color">#CFD8DC</color>
 </resources>

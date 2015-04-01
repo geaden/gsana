@@ -12,20 +12,23 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 
 import com.geaden.android.gsana.app.api.AsanaApi2;
 import com.geaden.android.gsana.app.fragments.MainDrawerFragment;
 import com.geaden.android.gsana.app.fragments.TaskDetailFragment;
 import com.geaden.android.gsana.app.fragments.TaskListFragment;
-import com.geaden.android.gsana.app.models.AsanaUser;
 import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
 
 
 /**
  * Gsana main activity class
  */
-public class MainActivity extends ActionBarActivity implements TaskListFragment.Callback, UserInfoListener {
+public class MainActivity extends ActionBarActivity implements TaskListFragment.Callback,
+        UserInfoListener, MainDrawerFragment.OnGsanaDrawerItemSelected {
+    private static final String SELECTED_WORKSPACE_TITLE = "selected_workspace_title";
+    private static final String SELECTED_PROJECT_TITLE = "selected_project_title";
+    private static final String SELECTED_WORKSPACE_ID = "selected_workspace_id";
+    private static final String SELECTED_PROJECT_ID = "selected_project_id";
     private final String LOG_TAG = getClass().getSimpleName();
 
     // Indicates whether current view in two pane mode
@@ -49,6 +52,11 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
 
     private ArrayAdapter<String> mWorkspaceAdapter;
     private static final String TASK_LIST_FRAGMENT = "task_list_fragment";
+    private static final String DRAWER_FRAGMENT = "drawer_fragment";
+    private String mWorkspaceSelectedTitle;
+    private String mProjectSelectedTitle;
+    private long mWorkspaceSelectedId;
+    private long mProjectSelectedId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +93,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
                 /** Called when a drawer has settled in a completely open state. */
                 public void onDrawerOpened(View drawerView) {
                     super.onDrawerOpened(drawerView);
-                    getSupportActionBar().setTitle(mDrawerTitle);
+                    getSupportActionBar().setTitle(mTitle);
                     invalidateOptionsMenu();
                 }
             };
@@ -116,7 +124,7 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             if (savedInstanceState == null) {
                 TaskListFragment taskListFragment = TaskListFragment.newInstance(mAccessToken);
                 getSupportFragmentManager().beginTransaction()
-                        .add(R.id.drawer_container, MainDrawerFragment.newInstance())
+                        .add(R.id.drawer_container, MainDrawerFragment.newInstance(), DRAWER_FRAGMENT)
                         .add(R.id.container, taskListFragment, TASK_LIST_FRAGMENT)
                         .commit();
             }
@@ -171,9 +179,12 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
             Utility.invalidateAccessToken(this);
             startActivity(new Intent(this, LoginActivity.class));
             return true;
-        } else if (id == R.id.action_sync) {
-            // Sync immediately
-            GsanaSyncAdapter.syncImmediately(this);
+        } else if (id == R.id.action_filter_dismiss) {
+            // Dismiss any task filter
+            onProjectSelected(0, null);
+            onWorkspaceSelected(0, null);
+            ((MainDrawerFragment) getSupportFragmentManager().findFragmentByTag(DRAWER_FRAGMENT))
+                    .resetDrawer();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -213,5 +224,56 @@ public class MainActivity extends ActionBarActivity implements TaskListFragment.
         TaskListFragment taskListFragment = (TaskListFragment) getSupportFragmentManager()
                 .findFragmentByTag(TASK_LIST_FRAGMENT);
         taskListFragment.updateGreetingsTextView(userInfo);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        Log.d(LOG_TAG, "Saving state");
+        outState.putLong(SELECTED_WORKSPACE_ID, mWorkspaceSelectedId);
+        outState.putLong(SELECTED_PROJECT_ID, mProjectSelectedId);
+        outState.putString(SELECTED_WORKSPACE_TITLE, mWorkspaceSelectedTitle);
+        outState.putString(SELECTED_PROJECT_TITLE, mProjectSelectedTitle);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        // Restore selected state
+        Log.d(LOG_TAG, "Restoring state");
+        mWorkspaceSelectedId = savedInstanceState.getLong(SELECTED_WORKSPACE_ID, 0);
+        mProjectSelectedId = savedInstanceState.getLong(SELECTED_PROJECT_ID, 0);
+        mWorkspaceSelectedTitle = savedInstanceState.getString(SELECTED_WORKSPACE_TITLE);
+        mProjectSelectedTitle = savedInstanceState.getString(SELECTED_WORKSPACE_TITLE);
+        onWorkspaceSelected(mWorkspaceSelectedId, mWorkspaceSelectedTitle);
+        onProjectSelected(mProjectSelectedId, mProjectSelectedTitle);
+    }
+
+    @Override
+    public void onWorkspaceSelected(long workspaceId, String title) {
+        mWorkspaceSelectedId = workspaceId;
+        ((MainDrawerFragment.OnGsanaDrawerItemSelected) getSupportFragmentManager()
+                .findFragmentByTag(TASK_LIST_FRAGMENT)).onWorkspaceSelected(workspaceId, title);
+        if (workspaceId > 0) {
+            // Set title
+            mWorkspaceSelectedTitle = title;
+            setTitle(mWorkspaceSelectedTitle);
+        } else {
+            setTitle(getString(R.string.app_name));
+        }
+    }
+
+    @Override
+    public void onProjectSelected(long projectId, String title) {
+        ((MainDrawerFragment.OnGsanaDrawerItemSelected) getSupportFragmentManager()
+                .findFragmentByTag(TASK_LIST_FRAGMENT)).onProjectSelected(projectId, title);
+        if (projectId > 0) {
+            mProjectSelectedTitle = title;
+            getSupportActionBar().setSubtitle(mProjectSelectedTitle);
+            mDrawerLayout.closeDrawers();
+            return;
+        } else {
+            getSupportActionBar().setSubtitle(null);
+        }
     }
 }

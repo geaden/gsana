@@ -48,7 +48,8 @@
     <ListView android:id="@+id/left_drawer_workspaces_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:items="3"
+        tools:listitems="3"
+        android:background="@drawable/list_selected_item"
         tools:listitem="@layout/left_drawer_wokspaces_list_item"
         android:choiceMode="singleChoice" />
 
@@ -66,6 +67,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         tools:listitem="@layout/list_asana_project_item"
+        android:background="@drawable/list_selected_item"
         android:choiceMode="singleChoice"
         android:divider="@color/gray" />
 

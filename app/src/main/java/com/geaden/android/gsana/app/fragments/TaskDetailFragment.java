@@ -27,7 +27,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.Chronometer;
 import android.widget.CompoundButton;
@@ -137,6 +136,21 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         }
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.open_task_asana) {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getTaskLink()));
+            startActivity(intent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Intent to share task
+     * @return share task intent
+     */
     private Intent createShareTaskIntent() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
@@ -263,6 +277,14 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         return cursorLoader;
     }
 
+    /**
+     * Gets task link
+     * @return link to the task
+     */
+    private String getTaskLink() {
+        return "https://app.asana.com/0/0/" + mTaskId;
+    }
+
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, final Cursor data) {
         switch (cursorLoader.getId()) {
@@ -290,7 +312,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                             taskCompleted.equals(TRUE) ? "Completed" : "In Progress", taskNotes);
 
                     // Add task permalink to share string
-                    mShareTask += "\nhttps://app.asana.com/0/0/" + mTaskId;
+                    mShareTask += "\n" + getTaskLink();
 
                     if (mTaskDuration != null) {
                         mShareTask += "\n#duration " + mTaskDuration;

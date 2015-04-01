@@ -4,6 +4,7 @@
     <!-- Gsana main theme -->
     <style name="GsanaTheme" parent="@style/AppTheme">
         <item name="actionBarStyle">@style/ActionBar.Solid.Gsana</item>
+        <item name="android:activatedBackgroundIndicator">@drawable/list_selected_item</item>
     </style>
 
     <!-- Gsana action bar -->
