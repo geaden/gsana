@@ -262,7 +262,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
 
                                                 @Override
                                                 public void onResult(AsanaTask value) {
-                                                    asanaTask.setAssigneeId(value.getAssignee());
+                                                    asanaTask.setAssignee(value.getAssignee());
                                                     asanaTask.setNotes(value.getNotes());
                                                     asanaTask.setAssigneeStatus(value.getAssigneeStatus());
                                                     asanaTask.setCompleted(value.getCompleted());
@@ -332,7 +332,7 @@ public class GsanaSyncAdapter extends AbstractThreadedSyncAdapter {
      * @param task the task to construct Content Values for
      * @return {@link android.content.ContentValues} with task data
      */
-    private ContentValues getTaskValues(AsanaTask task) {
+    public static ContentValues getTaskValues(AsanaTask task) {
         ContentValues taskValues = new ContentValues();
         taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_ID, task.getId());
         taskValues.put(GsanaContract.TaskEntry.COLUMN_TASK_CREATED_AT, task.getCreatedAt());

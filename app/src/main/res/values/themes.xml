@@ -10,5 +10,11 @@
     <!-- Gsana action bar -->
     <style name="ActionBar.Solid.Gsana" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
         <item name="background">@color/gsana_background_color</item>
+        <item name="android:actionDropDownStyle">@style/SpinnerColor</item>
+    </style>
+
+    <!-- Gsana spinner style -->
+    <style name="SpinnerColor">
+        <item name="android:background">@android:color/white</item>
     </style>
 </resources>

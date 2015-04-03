@@ -105,6 +105,12 @@ public abstract class Model {
      */
     abstract public JSONObject toJSONObject();
 
+    /**
+     * Converts object to application/x-www-form-urlencoded representation
+     * @return urlencoded form of the object
+     */
+    abstract public String toFormString();
+
     abstract public void setId(long id);
 
     abstract public void setName(String name);

@@ -26,13 +26,9 @@ public class TaskDetailActivity extends ActionBarActivity {
 
             Log.d(LOG_TAG, "Task Id: " + taskId);
 
-            Bundle arguments = new Bundle();
-            arguments.putString(TASK_KEY, taskId);
 
-            TaskDetailFragment fragment = new TaskDetailFragment();
-            fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.detail_container, fragment)
+                    .add(R.id.detail_container, TaskDetailFragment.getInstance(taskId))
                     .commit();
         }
     }

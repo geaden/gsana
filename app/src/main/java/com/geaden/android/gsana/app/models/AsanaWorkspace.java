@@ -7,6 +7,8 @@ import org.json.JSONObject;
  */
 public class AsanaWorkspace extends BaseModel {
 
+    public AsanaWorkspace() { };
+
     public AsanaWorkspace(JSONObject workspaceData) {
         super(workspaceData);
     }

@@ -28,6 +28,7 @@ public class AsanaProject extends BaseModel {
     private String createdAt;
     private String modifiedAt;
 
+    public AsanaProject() { };
 
     public AsanaProject(JSONObject projectData) {
         super(projectData);

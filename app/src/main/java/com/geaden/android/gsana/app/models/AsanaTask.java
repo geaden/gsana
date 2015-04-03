@@ -1,5 +1,7 @@
 package com.geaden.android.gsana.app.models;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,6 +37,8 @@ public class AsanaTask extends BaseModel {
     private String dueOn;
     private AsanaWorkspace workspace;
     private List<AsanaProject> projects;
+
+    public AsanaTask() { };
 
     /**
      * Constructs Asana Task model from JSON data
@@ -109,7 +113,7 @@ public class AsanaTask extends BaseModel {
         this.notes = notes;
     }
 
-    public void setAssigneeId(AsanaUser assignee) {
+    public void setAssignee(AsanaUser assignee) {
         this.assignee = assignee;
     }
 
@@ -174,5 +178,22 @@ public class AsanaTask extends BaseModel {
         }
 
         return result;
+    }
+
+    @Override
+    public String toFormString() {
+        StringBuilder sb = new StringBuilder(super.toFormString());
+        if (notes != null) {
+            sb.append("&notes=" + notes);
+        }
+        if (assignee != null) {
+            sb.append("&assignee" + assignee.getId());
+        }
+        if (projects != null && projects.size() > 0) {
+            // So far, only first project is added when task is created
+            sb.append("&projects=" + projects.get(0).getId());
+        }
+        Log.d(getClass().getSimpleName(), "Form " + sb.toString());
+        return sb.toString();
     }
 }

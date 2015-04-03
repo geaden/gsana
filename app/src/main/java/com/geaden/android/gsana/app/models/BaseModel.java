@@ -64,5 +64,10 @@ public class BaseModel extends Model {
     public void setName(String name) {
         this.name = name;
     }
+
+    @Override
+    public String toFormString() {
+        return String.format("name=%s", getName());
+    }
 }
 

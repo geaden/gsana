@@ -80,8 +80,8 @@ public class AsanaApi2 {
      */
     public void createTask(AsanaTask task, final AsanaCallback<AsanaTask> callback) {
         Log.d(LOG_TAG, "Creating task " + task.getName());
-        mAsanaApiBridge.request("POST", "/workspaces/" + task.getWorkspace().getId() + "/tasks",
-                task.toString(),
+        mAsanaApiBridge.request(HttpHelper.Method.POST, "/workspaces/" + task.getWorkspace().getId() + "/tasks",
+                task.toFormString(),
                 new AsanaCallback<AsanaResponse>() {
                     @Override
                     public void onResult(AsanaResponse response) {
@@ -93,6 +93,28 @@ public class AsanaApi2 {
                         callback.onError(exception);
                     }
                 });
+    }
+
+    /**
+     * Completes provided task
+     * @param taskId the task id to complete
+     * @param callback {@link com.geaden.android.gsana.app.api.AsanaCallback} callback for data returned
+     */
+    public void setTaskCompleted(long taskId, boolean completed, final AsanaCallback<AsanaTask> callback) {
+        Log.d(LOG_TAG, "Completing task " + taskId);
+        mAsanaApiBridge.request(HttpHelper.Method.PUT, "/tasks/" + taskId, "completed=" + completed,
+                new AsanaCallback<AsanaResponse>() {
+            @Override
+            public void onResult(AsanaResponse value) {
+                JSONObject taskData = (JSONObject) value.getData();
+                callback.onResult(new AsanaTask(taskData));
+            }
+
+            @Override
+            public void onError(Throwable exception) {
+                callback.onError(exception);
+            }
+        });
     }
 
     /**

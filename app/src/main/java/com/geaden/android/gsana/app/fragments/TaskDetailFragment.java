@@ -51,6 +51,8 @@ import com.geaden.android.gsana.app.api.toggl.util.DateUtil;
 import com.geaden.android.gsana.app.data.GsanaContract;
 import com.geaden.android.gsana.app.data.GsanaContract.TaskEntry;
 import com.geaden.android.gsana.app.models.AsanaStory;
+import com.geaden.android.gsana.app.models.AsanaTask;
+import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
 
 import java.util.Date;
 import java.util.List;
@@ -109,6 +111,14 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
 
     public TaskDetailFragment() {
         setHasOptionsMenu(true);
+    }
+
+    public static TaskDetailFragment getInstance(String taskId) {
+        TaskDetailFragment fragment = new TaskDetailFragment();
+        Bundle arguments = new Bundle();
+        arguments.putString(TaskDetailActivity.TASK_KEY, taskId);
+        fragment.setArguments(arguments);
+        return fragment;
     }
 
     @Override
@@ -189,6 +199,14 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         mAssigneeImageView = (ImageView) rootView.findViewById(R.id.asana_task_assignee_photo);
         mTaskNameTextView = (TextView) rootView.findViewById(R.id.asana_task_name);
         mTaskCompletedView = (CheckBox) rootView.findViewById(R.id.asana_task_compeleted);
+        mTaskCompletedView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SetTaskCompletedAsyncTask setTaskCompletedAsyncTask = new SetTaskCompletedAsyncTask();
+                setTaskCompletedAsyncTask.execute(isChecked);
+            }
+        });
+
         mTaskNotesTextView = (TextView) rootView.findViewById(R.id.asana_task_description);
         mTaskTimerToggeButton = (ToggleButton) rootView.findViewById(R.id.btn_toggl_start_timer);
         mTaskTimer = (Chronometer) rootView.findViewById(R.id.chrono_toggl_timer);
@@ -560,6 +578,42 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             mTaskCommentTextView.setText("");
             mTaskStoriesAdapter.add(mStory);
             mTaskStoriesAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private class SetTaskCompletedAsyncTask extends AsyncTask<Boolean, Void, Void> {
+        private boolean isCompeleted;
+
+        @Override
+        protected Void doInBackground(Boolean... params) {
+            isCompeleted = params[0];
+            AsanaApi2 asanaApi2 = AsanaApi2.getInstance(getActivity());
+            asanaApi2.setTaskCompleted(Long.valueOf(mTaskId), isCompeleted, new AsanaCallback<AsanaTask>() {
+                @Override
+                public void onResult(AsanaTask value) {
+                    ContentValues cv = GsanaSyncAdapter.getTaskValues(value);
+                    getActivity().getContentResolver().update(
+                            TaskEntry.buildTaskUri(Long.valueOf(mTaskId)),
+                            cv, null, null);
+                }
+
+                @Override
+                public void onError(Throwable exception) {
+                    Log.e(LOG_TAG, "Error updating task", exception);
+
+                }
+            });
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getActivity(), "Task completed :: " + isCompeleted, Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     }
 }
