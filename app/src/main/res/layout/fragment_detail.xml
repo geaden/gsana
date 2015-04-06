@@ -99,7 +99,7 @@
             android:id="@+id/chrono_toggl_timer"
             android:layout_marginLeft="16dp"
             android:gravity="center_vertical"
-            android:format="00:00:00"
+            tools:format="00:00:00"
             android:textColor="@android:color/white"
             android:textSize="18sp"
             android:layout_width="match_parent"

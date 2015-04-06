@@ -97,9 +97,7 @@ public class Utility {
      * @param refreshToken the refresh token
      */
     public static void putRefreshToken(Context context, String refreshToken) {
-        if (refreshToken != null) {
-            putSettingsStringValue(context, REFRESH_TOKEN_KEY, refreshToken);
-        }
+        putSettingsStringValue(context, REFRESH_TOKEN_KEY, refreshToken);
     }
 
     /**
@@ -181,19 +179,15 @@ public class Utility {
 
     /**
      * Gets timer formatted text, based on duration
-     * @param duration the duration of timer
+     * @param duration the duration of timer in seconds
      * @return formatted text
      */
     public static String getTimerFormatted(long duration) {
-        int day = (int) TimeUnit.SECONDS.toDays(duration);
-        long hours = TimeUnit.SECONDS.toHours(duration) - TimeUnit.SECONDS.toHours(TimeUnit.SECONDS.toDays(duration));
-        long minute = TimeUnit.SECONDS.toMinutes(duration) - TimeUnit.SECONDS.toMinutes(TimeUnit.SECONDS.toHours(duration));
-        long second = TimeUnit.SECONDS.toSeconds(duration) - TimeUnit.SECONDS.toSeconds(TimeUnit.SECONDS.toMinutes(duration));
-        StringBuilder sb = new StringBuilder();
-        if (day > 0) sb.append(day + ":");
-        sb.append(hours + ":");
-        sb.append(minute + ":");
-        sb.append(second + "");
-        return sb.toString();
+        long millis = duration * 1000;
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
+        df.setTimeZone(tz);
+        String time = df.format(new Date(millis));
+        return time;
     }
 }

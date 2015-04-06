@@ -83,16 +83,17 @@ public class LoginFragment extends Fragment {
 
         @Override
         protected void onPostExecute(AsanaOAuthClient.AsanaTokenResponse asanaTokenResponse) {
-            if (dialog.isShowing()) {
-                dialog.dismiss();
-            }
             Utility.putAccessToken(getActivity(), asanaTokenResponse.getAccessToken());
             if (!mAuthType.equals(Utility.REFRESH_TOKEN_KEY)) {
+                Log.d(LOG_TAG, "Saving refresh token " + asanaTokenResponse.getRefreshToken());
                 Utility.putRefreshToken(getActivity(), asanaTokenResponse.getRefreshToken());
-                // TODO: handle such situation
+                Log.d(LOG_TAG, "Saved refresh token " + Utility.getRefreshToken(getActivity()));
             }
             Intent mainIntent = new Intent(getActivity(), MainActivity.class);
             startActivity(mainIntent);
+            if (dialog.isShowing()) {
+                dialog.dismiss();
+            }
         }
     }
 }

@@ -219,6 +219,8 @@ public class GToggl {
                         }
                         JSONObject timeEntryJson = (JSONObject) value.getData();
                         TimeEntry timeEntryResult = new TimeEntry(timeEntryJson);
+                        timeEntry.setDuration(timeEntryResult.getDuration());
+                        timeEntry.setStart(timeEntryResult.getStart());
                         timeEntry.setStop(timeEntryResult.getStop());
                     }
 
