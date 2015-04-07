@@ -82,6 +82,32 @@ public class Utility {
     }
 
     /**
+     * Gets Long value from the settings
+     *
+     * @param context application context
+     * @param key settings key
+     */
+    public static Long getSettingsLongValue(Context context, String key) {
+        Long value = context.getSharedPreferences(Constants.SHARED_PREF_KEY, Context.MODE_PRIVATE)
+                .getLong(key, 0L);
+        return value;
+    }
+
+    /**
+     * Puts value into settings as long
+     *
+     * @param context application context
+     * @param key settings key
+     * @param value long settings value
+     */
+    public static void putSettingsLongValue(Context context, String key, Long value) {
+        SharedPreferences.Editor editor = context.getSharedPreferences(Constants.SHARED_PREF_KEY,
+                Context.MODE_PRIVATE).edit();
+        editor.putLong(key, value);
+        editor.commit();
+    }
+
+    /**
      * Puts access token to shared settings
      *
      * @param context application context

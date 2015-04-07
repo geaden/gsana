@@ -1,6 +1,5 @@
 package com.geaden.android.gsana.app.fragments;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentValues;
@@ -13,7 +12,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.service.notification.NotificationListenerService;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -42,7 +40,6 @@ import android.widget.ToggleButton;
 
 import com.geaden.android.gsana.app.LoadersColumns;
 import com.geaden.android.gsana.app.LoginActivity;
-import com.geaden.android.gsana.app.MainActivity;
 import com.geaden.android.gsana.app.R;
 import com.geaden.android.gsana.app.TaskDetailActivity;
 import com.geaden.android.gsana.app.Utility;
@@ -58,7 +55,8 @@ import com.geaden.android.gsana.app.models.AsanaStory;
 import com.geaden.android.gsana.app.models.AsanaTask;
 import com.geaden.android.gsana.app.sync.GsanaSyncAdapter;
 
-import java.util.Date;
+import org.slf4j.helpers.Util;
+
 import java.util.List;
 
 /**
@@ -111,6 +109,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
     private List<AsanaStory> mTaskStories;
     private GsanaStoriesAdapater mTaskStoriesAdapter;
     private final String TASK_TIMER_DURATION = "timer_duration";
+    private final String TASK_RUNNING_ID = "task_running_id";
 
 
     public TaskDetailFragment() {
@@ -359,16 +358,26 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
 
                     if (mTogglEnabled && mTogglKeyValid) {
                         Log.d(LOG_TAG, "[mTaskTimerRunning] " + mTaskTimerRunning);
+                        long taskRunningId = Utility.getSettingsLongValue(getActivity(), TASK_RUNNING_ID);
+                        Log.d(LOG_TAG, "[taskRunningId] " + taskRunningId);
+                        // If running task id equals current task, then timer runs also
+                        mTaskTimerRunning = mTaskTimerRunning || (taskRunningId == Long.valueOf(mTaskId));
                         if (mTaskTimerRunning) {
                             // TODO: set proper base and start timer
-                            String durationFromSettings = Utility.getSettingsStringValue(
+                            long durationFromSettings = Utility.getSettingsLongValue(
                                     getActivity(), TASK_TIMER_DURATION);
+
+                            // Restore timer only if current task corresponds to the saved one
                             Log.d(LOG_TAG, "[durationFromSettings] " + durationFromSettings);
-                            if (durationFromSettings != null && !durationFromSettings.equals("0")) {
+                            if (durationFromSettings > 0) {
                                 long duration = Long.valueOf(durationFromSettings);
                                 long passed = System.currentTimeMillis() - duration;
                                 mTaskTimer.setBase(SystemClock.elapsedRealtime() - passed);
                             }
+                            // Cancel current notification
+                            NotificationManager mNotificationManager = (NotificationManager)
+                                    getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+                            mNotificationManager.cancel(TASK_NOTIFICATION_ID);
                             mTaskTimer.start();
                             mTaskTimerToggeButton.setChecked(true);
                         }
@@ -386,10 +395,13 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
                                     mTaskTimer.setBase(SystemClock.elapsedRealtime());
                                     mTaskTimerRunning = false;
                                 }
-                                Utility.putSettingsStringValue(getActivity(), TASK_TIMER_DURATION, "0");
+                                // We don't need this settings so far. Update them only if user
+                                // left activity
+                                Utility.putSettingsLongValue(getActivity(), TASK_TIMER_DURATION, 0L);
+                                Utility.putSettingsLongValue(getActivity(), TASK_RUNNING_ID, 0L);
                                 TimeEntryAsyncTask timeEntryAsyncTask = new TimeEntryAsyncTask();
                                 timeEntryAsyncTask.execute(
-                                        new Object[]{data, started});
+                                        new Object[]{ data, started });
                             };
                         });
                     }
@@ -427,11 +439,6 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             Bundle extras = getActivity().getIntent().getExtras();
             if (extras != null && extras.containsKey(TASK_TIMER_RUNNING)) {
                 mTaskTimerRunning = extras.getBoolean(TASK_TIMER_RUNNING);
-                if (mTaskTimerRunning) {
-                    NotificationManager mNotificationManager = (NotificationManager)
-                            getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-                    mNotificationManager.cancel(TASK_NOTIFICATION_ID);
-                }
             }
         }
         Bundle arguments = getArguments();
@@ -447,8 +454,8 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
         if (mTaskTimerRunning) {
             long elapsedTime = SystemClock.elapsedRealtime() - mTaskTimer.getBase();
             long whenStarted = System.currentTimeMillis() - elapsedTime;
-            Utility.putSettingsStringValue(getActivity(), TASK_TIMER_DURATION, String.valueOf(
-                    whenStarted));
+            Utility.putSettingsLongValue(getActivity(), TASK_TIMER_DURATION, whenStarted);
+            Utility.putSettingsLongValue(getActivity(), TASK_RUNNING_ID, Long.valueOf(mTaskId));
             // Show notification when pausing
             NotificationCompat.Builder mBuilder =
                     new NotificationCompat.Builder(getActivity())
@@ -470,6 +477,9 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             // This ensures that navigating backward from the Activity leads out of
             // your application to the Home screen.
             TaskStackBuilder stackBuilder = TaskStackBuilder.create(getActivity());
+            // Adds the back stack for the Intent (but not the Intent itself)
+            // stackBuilder.addParentStack(TaskDetailActivity.class);
+            // Adds the Intent that starts the Activity to the top of the stack
             stackBuilder.addNextIntent(resultIntent);
             PendingIntent resultPendingIntent =
                     stackBuilder.getPendingIntent(
@@ -534,6 +544,7 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             getActivity().getContentResolver().update(GsanaContract.TaskEntry.buildTaskUri(
                             cursor.getLong(LoadersColumns.COL_TASK_ID)),
                     cv, null, null);
+            Log.d(LOG_TAG, "Updated TOGGL_ENTRY_ID" + timeEntry.getId());
             return null;
         }
     }
@@ -656,7 +667,8 @@ public class TaskDetailFragment extends Fragment implements LoaderManager.Loader
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(getActivity(), "Task completed :: " + isCompeleted, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), isCompeleted ? "Task completed" : "Task uncompleted",
+                            Toast.LENGTH_SHORT).show();
                 }
             });
         }
